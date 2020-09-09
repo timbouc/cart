@@ -8,7 +8,7 @@
 import { LocalFileCartStorage } from './LocalFileCartStorage';
 import Storage from './CartStorage';
 import { InvalidConfig, DriverNotSupported } from './exceptions';
-import { CartConfig, CartStorageConfig, StorageSingleDriverConfig, CartContent, CartProduct, CartItem, CartUpdateOption, CartCondition, } from './types';
+import { CartConfig, CartStorageConfig, StorageSingleDriverConfig, CartContent, CartInputItem, CartItem, CartUpdateOption, CartCondition, } from './types';
 import { MethodNotSupported } from './exceptions';
 import { resolve } from 'path';
 
@@ -161,7 +161,7 @@ export default class Cart {
 	/**
 	 * Add single or multiple items to cart
 	 */
-	public add(product: CartProduct | Array<CartProduct>): Promise<CartItem | Array<CartItem>> {
+	public add(product: CartInputItem | Array<CartInputItem>): Promise<CartItem | Array<CartItem>> {
 		const storage = this.storage()
 
 		return new Promise(async (resolve, reject) => {

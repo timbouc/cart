@@ -1,6 +1,6 @@
 # @timbouc/cart
 
-A Shopping Cart Implementation for Node.js
+A Shopping Cart Implementation for Node.js and browsers.
 
 
 
@@ -34,7 +34,7 @@ cart.session(context.uudid)
 ```typescript
 const { RedisStorage, PostgresStorage } from './StorageDrivers';
 
-let cart = new Cart(config)
+const cart = new Cart(config)
 cart.registerDriver('redis', RedisStorage)
 cart.registerDriver('pg', PostgresStorage())
 
@@ -68,16 +68,16 @@ If the file doesn't exist yet, it will be created.
 
 ```javascript
 // add one item to cart
-let item = await cart.add({
+const item = await cart.add({
     id: product.id,
     name: product.name,
     price: product.price,
     quantity: 3, // defaults to one
-    attributes: options as Array<CartOptions>,
+    options: options as Array<CartItemOption>,
 })
 
 // add multiple items to cart
-let [item1, item2] = await cart.add([
+const [item1, item2] = await cart.add([
     {
         id: product1.id,
         name: product1.name,

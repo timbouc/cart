@@ -39,7 +39,7 @@ export interface CartItemOption{
 	[key: string]: any;
 }
 
-export interface CartProduct {
+export interface CartInputItem {
 	_id: string|number;
 	id: string|number;
 	name: string;
