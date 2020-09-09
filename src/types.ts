@@ -24,9 +24,6 @@ export interface CartStorageConfig {
 }
 
 export interface CartConfig {
-	/**
-	 * The default disk returned by `disk()`.
-	 */
 	default?: string;
 	storages?: CartStorageConfig;
 }
@@ -38,12 +35,18 @@ export interface CartContent{
 	total: number;
 }
 
+export interface CartItemOption{
+	[key: string]: any;
+}
+
 export interface CartProduct {
+	_id: string|number;
 	id: string|number;
 	name: string;
 	price: string|number;
-	quantity: number|string;
-	conditions: Array<CartCondition>
+	quantity?: number|string;
+	conditions?: Array<CartCondition>;
+	options?: Array<CartItemOption>;
 }
 
 export interface CartItem {
@@ -51,6 +54,7 @@ export interface CartItem {
 	name: string;
 	price: number;
 	quantity: number;
+	options?: Array<CartItemOption>;
 }
 
 export interface CartUpdateOption {
@@ -65,7 +69,7 @@ export interface CartUpdateOption {
 export interface CartCondition {
 	name: string;
 	type: 'tax' | 'voucher' | 'sale' | 'discount' | 'coupon';
-    target: 'subtotal' | 'total';
+    target: string | 'subtotal' | 'total';
 	value: string|number;
 	order: number;
     attributes: {

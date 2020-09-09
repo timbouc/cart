@@ -10,7 +10,7 @@ import Storage from './CartStorage';
 import { InvalidConfig, DriverNotSupported } from './exceptions';
 import { CartConfig, CartStorageConfig, StorageSingleDriverConfig, CartContent, CartProduct, CartItem, CartUpdateOption, CartCondition, } from './types';
 import { MethodNotSupported } from './exceptions';
-import { CartStorage } from '.';
+import { resolve } from 'path';
 
 interface StorageConstructor<T extends Storage = Storage> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,38 +38,60 @@ export default class Cart {
 	 */
 	private _drivers: Map<string, StorageConstructor<Storage>> = new Map();
 
+	/**
+	 * Current session.
+	 */
+	private _session: string;
+
 	constructor(config: CartConfig) {
 		this.defaultStorage = config.default;
 		this.storagesConfig = config.storages || {};
+		// this._session = ?? Set default session somehow?
 		this.registerDriver('local', LocalFileCartStorage);
+	}
+
+	/**
+	 * Get cart contents
+	 */
+	private compute(instance: CartContent): CartContent {
+		/**
+		 * TODO: compute conditions and items against subtotal,total
+		 * NOTE:
+		 * Compute sequence is critial.
+		 * Ideally: (1) sum items, (2) calculate subtotal +/- conditions, (3) calculate total
+		 * Remember CartCondition.order which specifies when it's applied. i.e. conditions of the same target should be sorted by order before being applied
+		 * Remember CartCondition.target which applies the condition ammount to the targeted item, subtotal or total
+		 * Remember CartCondition.value which (for a value of 10) can take the form `10`,`-10`,`"10"`,`"+10"`,`"-10"`,`"10%"`
+		 */
+		return instance;
 	}
 
 	/**
 	 * Get the instantiated storages
 	 */
-	public getStorages(): Map<string, Storage> {
+	public storages(): Map<string, Storage> {
 		return this._storages;
 	}
 
 	/**
 	 * Get the registered drivers
 	 */
-	getDrivers(): Map<string, StorageConstructor<Storage>> {
+	drivers(): Map<string, StorageConstructor<Storage>> {
 		return this._drivers;
 	}
 
 	/**
-	 * Set cart instance
-	 * @param uuid
+	 * Set cart session instance
+	 * @param session
 	 */
-	public session(uuid: string): Cart{
-		// set current session
+	public session(session: string): Cart{
+		this._session = session;
 		return this
 	}
 
 	/**
 	 * Set current working driver
-	 * @param uuid
+	 * @param driver
 	 */
 	public driver(driver: string): Cart{
 		this.storage(driver);
@@ -139,9 +161,41 @@ export default class Cart {
 	/**
 	 * Add single or multiple items to cart
 	 */
-	public add(item: CartProduct | Array<CartProduct>): Promise<CartItem> {
-		// this.storage().put(key, JSON.stringify(item))
-		throw new MethodNotSupported('add');
+	public add(product: CartProduct | Array<CartProduct>): Promise<CartItem | Array<CartItem>> {
+		const storage = this.storage()
+
+		return new Promise(async (resolve, reject) => {
+			try{
+				const instance = await this.content();
+
+				if(!(product instanceof Array)){
+					product = [product];
+				}
+				let items = [];
+
+				product.forEach(p => {
+					items.push({
+						_id: instance.items.length + 1,
+						id: p.id,
+						name: p.name,
+						price: Number(p.price),
+						quantity: p.quantity || 1,
+						options: p.options || [],
+					} as CartItem);
+
+					if(p.conditions){
+						instance.conditions.push.apply(null, p.conditions);
+					}
+				});
+
+				instance.items.push.apply(null, items);
+				await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+				resolve(items.length>1? items : items[0]);
+			}catch(error){
+				reject(error);
+			}
+		})
 	}
 
 	/**
@@ -161,50 +215,68 @@ export default class Cart {
 	/**
 	 * Apply a condition or conditions to cart
 	 */
-	public condition(condition: CartCondition | Array<CartCondition>): Promise<any> {
+	public apply(condition: CartCondition | Array<CartCondition>): Promise<any> {
 		throw new MethodNotSupported('condition');
+	}
+
+	/**
+	 * Get all cart conditions
+	 */
+	public conditions(): Promise<Array<CartCondition>> {
+		throw new MethodNotSupported('conditions');
 	}
 
 	/**
 	 * Retrieve a cart condition
 	 */
-	public getCondition(name: string): Promise<CartCondition> {
+	public condition(name: string): Promise<CartCondition> {
 		throw new MethodNotSupported('getCondition');
 	}
 
 	/**
 	 * Remove a cart condition
 	 */
-	public removeCondition(name: string): Promise<boolean> {
+	public removeCondition(name: string): Promise<void> {
 		throw new MethodNotSupported('removeCondition');
 	}
 
 	/**
-	 * Retrieve a cart condition
+	 * Clear cart conditions
 	 */
-	public removeCartItemCondition(name: string): Promise<boolean> {
-		throw new MethodNotSupported('removeCartItemCondition');
+	public clearConditions(name: string): Promise<void> {
+		throw new MethodNotSupported('clearConditions');
 	}
 
 	/**
 	 * Check if cart is empty
 	 */
 	public empty(): Promise<boolean> {
-		throw new MethodNotSupported('empty');
-	}
-
-	/**
-	 * List cart items
-	 */
-	public list(): Promise<Array<CartItem>> {
-		throw new MethodNotSupported('list');
+		return new Promise(async resolve => {
+			resolve(!(await this.items()).length)
+		});
 	}
 
 	/**
 	 * Get cart contents
 	 */
 	public content(): Promise<CartContent> {
-		throw new MethodNotSupported('content');
+		const storage = this.storage();
+		return new Promise(async (resolve, reject) => {
+			try{
+				resolve(
+					storage.parse(await storage.get(this._session)) as CartContent
+				);
+			}catch(error){
+				reject(error);
+			}
+		});
+	}
+
+	/**
+	 * List cart items
+	 */
+	public items(): Promise<Array<CartItem>> {
+		throw new MethodNotSupported('items');
 	}
 
 	/**

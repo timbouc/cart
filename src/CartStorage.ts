@@ -36,4 +36,11 @@ export default abstract class CartStorage {
 	clear(): Promise<void> {
 		throw new MethodNotSupported('clear');
 	}
+
+	parse(data): any{
+		return JSON.parse(data)
+	}
+	serialise(data): any{
+		return JSON.stringify(data)
+	}
 }

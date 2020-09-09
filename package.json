@@ -1,7 +1,7 @@
 {
   "name": "@timbouc/cart",
-  "version": "1.0.3",
-  "description": "Flexible and Fluent way to manage cart.",
+  "version": "0.0.1",
+  "description": "A flexible and fluent way to manage cart.",
   "homepage": "https://github.com/timbouc/cart#readme",
   "license": "MIT",
   "main": "build/index.js",
