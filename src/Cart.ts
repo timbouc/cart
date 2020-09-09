@@ -174,6 +174,8 @@ export default class Cart {
 				let items = [];
 
 				product.forEach(p => {
+					// TODO: check if item already exists then increment by quantity or 1
+					//		 check against `id` and `options`
 					items.push({
 						_id: instance.items.length + 1,
 						id: p.id,
