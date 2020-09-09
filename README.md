@@ -1,4 +1,4 @@
-# @moirei/cart
+# @timbouc/cart
 
 A Shopping Cart Implementation for Node.js
 
@@ -10,15 +10,15 @@ This package is available in the npm registry.
 It can easily be installed with `npm` or `yarn`.
 
 ```bash
-$ npm i @moirei/cart
+$ npm i @timbouc/cart
 # or
-$ yarn add @moirei/cart
+$ yarn add @timbouc/cart
 ```
 
 Instantiate with a [configuration](examples/config.ts).
 
 ```javascript
-const { Cart } = require('@moirei/cart');
+const { Cart } = require('@timbouc/cart');
 const cart = new Cart(config);
 cart.session(context.uudid)
 ```
@@ -44,7 +44,7 @@ cart.driver('redis')
 	.add(...)
 
 // use postgres storage for wishlist
-cart.driver('[g]')
+cart.driver('pg')
     .session(context.uudid + ':wishlist')
 	.add(...)
 ```
@@ -82,6 +82,10 @@ let [item1, item2] = await cart.add([
         id: product1.id,
         name: product1.name,
         price: product1.price,
+        options: [{
+            name: "Color",
+            value: "pink",
+        }]
     },
     {
         id: product2.id,
@@ -128,19 +132,21 @@ cart.update(456, {
 </details>
 
 <details>
-<summary markdown="span"><code>getItem(item_id: number_string): Promise&lt;CartItem&gt;</code></summary>
+<summary markdown="span"><code>get(item_id: number_string): Promise&lt;CartItem&gt;</code></summary>
+
 
 ```javascript
-const item = await cart.getItem(item_id);
+const item = await cart.get(item_id);
 ```
 
 </details>
 
 <details>
-<summary markdown="span"><code>isEmpty(): Promise&lt;Boolean&gt;</code></summary>
+<summary markdown="span"><code>empty(): Promise&lt;Boolean&gt;</code></summary>
+
 
 ```javascript
-await cart.isEmpty()
+await cart.empty()
 ```
 
 </details>
