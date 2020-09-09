@@ -1,0 +1,43 @@
+{
+  "name": "@timbouc/cart",
+  "version": "1.0.3",
+  "description": "Flexible and Fluent way to manage cart.",
+  "homepage": "https://github.com/timbouc/cart#readme",
+  "license": "MIT",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "keywords": [
+    "cart",
+    "filesystem",
+    "redis",
+    "promise",
+    "async"
+  ],
+  "author": "Augustus Okoye <agstrscntw3@gmail.com>",
+  "contributors": [
+    "Augustus Okoye <agstrscntw3@gmail.com>",
+    "Daniel Smit <>"
+  ],
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "prepare": "tsc -b tsconfig.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timbouc/cart.git"
+  },
+  "bugs": {
+    "url": "https://github.com/timbouc/cart/issues"
+  },
+  "dependencies": {
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "@types/node": "^14.6.4"
+  }
+}
