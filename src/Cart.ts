@@ -43,10 +43,10 @@ export default class Cart {
 	 */
 	private _session: string;
 
-	constructor(config: CartConfig) {
+	constructor(session: string, config: CartConfig) {
 		this.defaultStorage = config.default;
 		this.storagesConfig = config.storages || {};
-		this._session = 'cart';// ?? Set default session somehow?
+		this._session = session;
 		this.registerDriver('local', LocalFileCartStorage);
 	}
 

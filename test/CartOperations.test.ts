@@ -9,7 +9,8 @@ import path from 'path';
 import { Cart } from '../src';
 const { expect } = require('chai');
 
-const cart = new Cart({
+const session = 'user-1';
+const cart = new Cart(session, {
 	default: 'local',
 	storages: {
 		local: {

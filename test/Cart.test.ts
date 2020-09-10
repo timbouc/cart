@@ -11,15 +11,17 @@ import { LocalFileCartStorage } from '../src/LocalFileCartStorage';
 import { InvalidConfig, DriverNotSupported } from './../src/exceptions';
 const { expect } = require('chai');
 
+const session = 'user-1';
+
 describe('CartStorage Manager', () => {
 	it('throw exception when no driver name is defined', () => {
-		const cart = new Cart({});
+		const cart = new Cart(session, {});
 		const fn = (): CartStorage => cart.storage();
 		expect(fn).to.throw(InvalidConfig.missingStorageName().message);
 	});
 
 	it('throw exception when storage config is missing', () => {
-		const cart = new Cart({
+		const cart = new Cart(session, {
 			default: 'local',
 		});
 		const fn = (): CartStorage => cart.storage();
@@ -27,7 +29,7 @@ describe('CartStorage Manager', () => {
 	});
 
 	it('throw exception when storage config doesnt have driver', () => {
-		const cart = new Cart({
+		const cart = new Cart(session, {
 			default: 'local',
 			storages: {
 				// @ts-expect-error
@@ -39,7 +41,7 @@ describe('CartStorage Manager', () => {
 	});
 
 	it('throw exception when driver is invalid', () => {
-		const cart = new Cart({
+		const cart = new Cart(session, {
 			default: 'local',
 			storages: {
 				local: {
@@ -55,7 +57,7 @@ describe('CartStorage Manager', () => {
 	});
 
 	it('return storage instance for a given driver', () => {
-		const cart = new Cart({
+		const cart = new Cart(session, {
 			default: 'local',
 			storages: {
 				local: {
@@ -71,7 +73,7 @@ describe('CartStorage Manager', () => {
 	});
 
 	it('extend and add new drivers', () => {
-		const cart = new Cart({
+		const cart = new Cart(session, {
 			default: 'local',
 			storages: {
 				local: {
@@ -87,7 +89,7 @@ describe('CartStorage Manager', () => {
 	});
 
 	it('get storage with custom config', () => {
-		const cart = new Cart({
+		const cart = new Cart(session, {
 			default: 'local',
 			storages: {
 				local: {

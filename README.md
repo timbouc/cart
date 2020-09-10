@@ -34,18 +34,18 @@ cart.session(context.uudid)
 ```typescript
 const { RedisStorage, PostgresStorage } from './StorageDrivers';
 
-const cart = new Cart(config)
+const session = context.uudid
+const cart = new Cart(session, config)
 cart.registerDriver('redis', RedisStorage)
 cart.registerDriver('pg', PostgresStorage())
 
 // use redis storage for different shopping carts
 cart.driver('redis')
-    .session(context.uudid)
 	.add(...)
 
 // use postgres storage for wishlist
 cart.driver('pg')
-    .session(context.uudid + ':wishlist')
+    .session(session + ':wishlist') // can also change session (user)
 	.add(...)
 ```
 
