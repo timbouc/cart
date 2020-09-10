@@ -46,7 +46,7 @@ export default class Cart {
 	constructor(config: CartConfig) {
 		this.defaultStorage = config.default;
 		this.storagesConfig = config.storages || {};
-		// this._session = ?? Set default session somehow?
+		this._session = 'cart';// ?? Set default session somehow?
 		this.registerDriver('local', LocalFileCartStorage);
 	}
 
@@ -171,19 +171,19 @@ export default class Cart {
 				if(!(product instanceof Array)){
 					product = [product];
 				}
-				let items = [];
+				let items: Array<CartItem> = [];
 
 				product.forEach(p => {
 					// TODO: check if item already exists then increment by quantity or 1
 					//		 check against `id` and `options`
 					items.push({
-						_id: instance.items.length + 1,
-						id: p.id,
+						_id: String(p._id?? instance.items.length + 1),
+						id: String(p.id),
 						name: p.name,
 						price: Number(p.price),
-						quantity: p.quantity || 1,
+						quantity: Number(p.quantity || 1),
 						options: p.options || [],
-					} as CartItem);
+					});
 
 					if(p.conditions){
 						instance.conditions.push.apply(null, p.conditions);

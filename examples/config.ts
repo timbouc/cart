@@ -23,8 +23,8 @@ export default {
 		local: {
 			driver: 'local',
 			config: {
-                path: process.cwd(),
-                encoding: 'utf8',
+				path: process.cwd() + 'cart.file',
+				encoding: 'utf8',
 			},
 		},
 

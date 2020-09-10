@@ -37,10 +37,10 @@ export default abstract class CartStorage {
 		throw new MethodNotSupported('clear');
 	}
 
-	parse(data): any{
+	parse(data: string): any{
 		return JSON.parse(data)
 	}
-	serialise(data): any{
+	serialise(data: any): string{
 		return JSON.stringify(data)
 	}
 }

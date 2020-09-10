@@ -50,7 +50,8 @@ export interface CartInputItem {
 }
 
 export interface CartItem {
-	id: number;
+	_id: string;
+	id: string;
 	name: string;
 	price: number;
 	quantity: number;

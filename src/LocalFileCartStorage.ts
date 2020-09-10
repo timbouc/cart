@@ -31,8 +31,7 @@ export class LocalFileCartStorage extends CartStorage {
 	 * Check if key exists
 	 */
 	async has(key: string) {
-		// @ts-ignore
-        return this.getFileContent()[key];
+        return !!this.getFileContent()[key];
 	}
 
 	/**
