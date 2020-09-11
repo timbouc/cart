@@ -186,11 +186,13 @@ export default class Cart {
 					});
 
 					if(p.conditions){
-						instance.conditions.push.apply(null, p.conditions);
+						// instance.conditions.push.apply(null, p.conditions);
+						Array.prototype.push.apply(instance.conditions, p.conditions);
 					}
 				});
 
-				instance.items.push.apply(null, items);
+				// instance.items.push.apply(null, items);
+				Array.prototype.push.apply(instance.items, items);
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
 				resolve(items.length>1? items : items[0]);
@@ -265,8 +267,17 @@ export default class Cart {
 		const storage = this.storage();
 		return new Promise(async (resolve, reject) => {
 			try{
+				let raw = await storage.get(this._session);
+				if(raw){
+					resolve( storage.parse(raw) as CartContent )
+				}
 				resolve(
-					storage.parse(await storage.get(this._session)) as CartContent
+					{
+						items: [],
+						conditions: [],
+						subtotal: 0,
+						total: 0
+					} as CartContent
 				);
 			}catch(error){
 				reject(error);

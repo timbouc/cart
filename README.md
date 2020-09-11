@@ -19,8 +19,7 @@ Instantiate with a [configuration](examples/config.ts).
 
 ```javascript
 const { Cart } = require('@timbouc/cart');
-const cart = new Cart(config);
-cart.session(context.uudid)
+const cart = new Cart(context.uudid, config);
 ```
 
 
