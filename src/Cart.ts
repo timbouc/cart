@@ -289,7 +289,13 @@ export default class Cart {
 	 * List cart items
 	 */
 	public items(): Promise<Array<CartItem>> {
-		throw new MethodNotSupported('items');
+		return new Promise(async (resolve, reject) => {
+      try {
+        resolve((await this.content()).items)
+      } catch(error) {
+        reject(error);
+      }
+    });
 	}
 
 	/**
