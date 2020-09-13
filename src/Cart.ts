@@ -206,7 +206,41 @@ export default class Cart {
 	 * Update a cart item
 	 */
 	public update(id: string|number, options: CartUpdateOption): Promise<CartItem> {
-		throw new MethodNotSupported('update');
+    const storage = this.storage();
+
+		return new Promise(async (resolve, reject) => {
+			try{
+        const instance = await this.content();
+        const existingItem = instance.items.find(item => item.id == id);
+
+        if(existingItem){
+          existingItem.name = options.name;
+          existingItem.price = options.price;
+
+          if (typeof options.quantity === 'number') {
+            existingItem.quantity = options.quantity;
+          } else if(options.quantity.relative){
+            if(typeof existingItem.quantity === 'number' && typeof options.quantity.value === 'number') {
+              existingItem.quantity += options.quantity.value;
+            } else if(typeof existingItem.quantity === 'string' && typeof options.quantity.value === 'string') {
+              existingItem.quantity = (parseFloat(existingItem.quantity) + parseFloat(options.quantity.value)).toString();
+            } else {
+              throw 'Conflict between quantity type and value';
+            }
+          } else if(typeof existingItem.quantity == typeof options.quantity) {
+            existingItem.quantity = options.quantity.value;
+          }
+        } else {
+          throw 'Item id does not exist';
+        }
+
+				await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+				resolve(existingItem);
+			}catch(error){
+				reject(error);
+			}
+		})
 	}
 
 	/**
