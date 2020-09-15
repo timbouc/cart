@@ -54,7 +54,7 @@ export interface CartItem {
 	id: string;
 	name: string;
 	price: number;
-	quantity: string|number;
+	quantity: number;
 	options?: Array<CartItemOption>;
 }
 

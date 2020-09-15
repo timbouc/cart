@@ -219,16 +219,19 @@ export default class Cart {
 
           if (typeof options.quantity === 'number') {
             existingItem.quantity = options.quantity;
-          } else if(options.quantity.relative){
-            if(typeof existingItem.quantity === 'number' && typeof options.quantity.value === 'number') {
-              existingItem.quantity += options.quantity.value;
-            } else if(typeof existingItem.quantity === 'string' && typeof options.quantity.value === 'string') {
-              existingItem.quantity = (parseFloat(existingItem.quantity) + parseFloat(options.quantity.value)).toString();
+          } else {
+            let optionQuantity : number = 0;
+            if(typeof options.quantity.value === 'string'){
+              optionQuantity = parseInt(options.quantity.value); // Round to 2 decimal places
             } else {
-              throw 'Conflict between quantity type and value';
+              optionQuantity = options.quantity.value;
             }
-          } else if(typeof existingItem.quantity == typeof options.quantity) {
-            existingItem.quantity = options.quantity.value;
+
+            if(options.quantity.relative){
+              existingItem.quantity += optionQuantity;
+            } else {
+              existingItem.quantity = optionQuantity;
+            }
           }
         } else {
           throw 'Item id does not exist';
