@@ -166,34 +166,87 @@ export default class Cart {
 
 		return new Promise(async (resolve, reject) => {
 			try{
-				const instance = await this.content();
+        const instance = await this.content();
 
 				if(!(product instanceof Array)){
 					product = [product];
 				}
-				let items: Array<CartItem> = [];
-
+        let items: Array<CartItem> = [];
+        let existingItems: Array<CartItem> = [];
+        let existingItemOptions: { id: number | string, options: CartUpdateOption }[] = [];
+        
 				product.forEach(p => {
-					// TODO: check if item already exists then increment by quantity or 1
-					//		 check against `id` and `options`
-					items.push({
-						_id: String(p._id?? instance.items.length + 1),
-						id: String(p.id),
-						name: p.name,
-						price: Number(p.price),
-						quantity: Number(p.quantity || 1),
-						options: p.options || [],
-					});
+					// Check if item already exists then increment by quantity or 1,
+          //		 checking against `id` and `options`
+          let existingItem = instance.items.find(item => 
+            (item.id == p.id && 
+            (!item.options && !p.options) || 
+            ((item.options && p.options) && item.options!.length == p.options!.length &&
+            (item.options!.every(option => p.options!.indexOf(option) > -1))))
+          );
+
+          let itemQuantity : number = 0;
+          let itemPrice : number = 0;
+
+          // Parse and specify default quantity of 1
+          if(p.quantity && typeof p.quantity == 'string'){
+            itemQuantity = parseInt(p.quantity);
+          } else if(p.quantity && typeof p.quantity == 'number'){
+            itemQuantity = p.quantity;
+          } else {
+            itemQuantity = 1;
+          }
+
+          // Parse and round to 2 decimal places
+          if(p.price && typeof p.price == 'string'){
+            itemPrice = Math.round(parseFloat(p.price) * 100) / 100;
+          } else if(p.price && typeof p.price == 'number'){
+            itemPrice = Math.round(p.price * 100) / 100;
+          } else {
+            throw 'Price is undefined';
+          }
+
+          if(existingItem){
+            let itemOptions : CartUpdateOption;
+            
+            if(itemQuantity){
+              itemOptions = {
+                name: existingItem.name,
+                price: existingItem.price,
+                quantity: { value: itemQuantity, relative: true}
+              };
+            } else {
+              throw 'Quantity is undefined';
+            }
+            
+            existingItemOptions.push({id: existingItem.id, options: itemOptions});
+          } else {
+            items.push({
+              _id: String(p._id?? instance.items.length + 1),
+              id: String(p.id),
+              name: p.name,
+              price: itemPrice,
+              quantity: itemQuantity,
+              options: p.options || [],
+            });
+          }
 
 					if(p.conditions){
-						// instance.conditions.push.apply(null, p.conditions);
 						Array.prototype.push.apply(instance.conditions, p.conditions);
 					}
 				});
 
-				// instance.items.push.apply(null, items);
+        // Put new items into database
 				Array.prototype.push.apply(instance.items, items);
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+        // Update existing items in database
+        // existingItemOptions.forEach(item => {
+        //   existingItems.push(await this.update(item.id, item.options));
+        // })
+
+        // Merge new and existing items together to return
+        items = items.concat(existingItems);
 
 				resolve(items.length>1? items : items[0]);
 			}catch(error){
@@ -206,7 +259,44 @@ export default class Cart {
 	 * Update a cart item
 	 */
 	public update(id: string|number, options: CartUpdateOption): Promise<CartItem> {
-		throw new MethodNotSupported('update');
+    const storage = this.storage();
+
+		return new Promise(async (resolve, reject) => {
+			try{
+        const instance = await this.content();
+        const existingItem = instance.items.find(item => item.id == id);
+
+        if(existingItem){
+          existingItem.name = options.name;
+          existingItem.price = options.price;
+
+          if (typeof options.quantity === 'number') {
+            existingItem.quantity = options.quantity;
+          } else {
+            let optionQuantity : number = 0;
+            if(typeof options.quantity.value === 'string'){
+              optionQuantity = parseInt(options.quantity.value); // Round to 2 decimal places
+            } else {
+              optionQuantity = options.quantity.value;
+            }
+
+            if(options.quantity.relative){
+              existingItem.quantity += optionQuantity;
+            } else {
+              existingItem.quantity = optionQuantity;
+            }
+          }
+        } else {
+          throw 'Item id does not exist';
+        }
+
+				await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+				resolve(existingItem);
+			}catch(error){
+				reject(error);
+			}
+		})
 	}
 
 	/**
@@ -289,7 +379,13 @@ export default class Cart {
 	 * List cart items
 	 */
 	public items(): Promise<Array<CartItem>> {
-		throw new MethodNotSupported('items');
+		return new Promise(async (resolve, reject) => {
+      try {
+        resolve((await this.content()).items)
+      } catch(error) {
+        reject(error);
+      }
+    });
 	}
 
 	/**
