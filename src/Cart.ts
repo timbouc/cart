@@ -418,7 +418,20 @@ export default class Cart {
 	 * Clear cart contents
 	 */
 	public clear(): Promise<boolean> {
-		throw new MethodNotSupported('clear');
+		const storage = this.storage();
+
+		return new Promise(async (resolve, reject) => {
+			try{
+        let instance = await this.content();
+        instance.items = [];
+
+				await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+				resolve(true);
+			}catch(error){
+				reject(false);
+			}
+		})
 	}
 
 	/**
