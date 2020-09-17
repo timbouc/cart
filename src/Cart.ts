@@ -301,8 +301,21 @@ export default class Cart {
 	/**
 	 * Get cart item
 	 */
-	public get(id: string|number): Promise<CartItem> {
-		throw new MethodNotSupported('get');
+	public get(id: string): Promise<CartItem> {
+		return new Promise(async (resolve, reject) => {
+			try{
+        const instance = await this.content();
+        const existingItem = instance.items.find(item => item.id.localeCompare(id) == 0);
+
+        if(existingItem){
+          resolve(existingItem);
+        } else {
+          reject('Item id does not exist');
+        }
+      }catch(error){
+				reject(error);
+			}
+    });
 	}
 
 	/**
