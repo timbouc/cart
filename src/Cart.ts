@@ -240,10 +240,9 @@ export default class Cart {
 				Array.prototype.push.apply(instance.items, items);
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
-        // Update existing items in database
-        // existingItemOptions.forEach(item => {
-        //   existingItems.push(await this.update(item.id, item.options));
-        // })
+        existingItems = await this.asyncForEach(existingItemOptions, async(item) => {
+          return await this.update(item.id, item.options);
+        });
 
         // Merge new and existing items together to return
         items = items.concat(existingItems);
@@ -253,7 +252,7 @@ export default class Cart {
 				reject(error);
 			}
 		})
-	}
+  }
 
 	/**
 	 * Update a cart item
@@ -408,4 +407,15 @@ export default class Cart {
 	public clear(): Promise<boolean> {
 		throw new MethodNotSupported('clear');
 	}
+
+	/**
+	 * Generic async for each
+	 */
+  private async asyncForEach<T>(array: T[], callback: (item: T, index: number, allItems: T[]) => any): Promise<any> {
+    let arrayItems : Array<any> = [];
+    for(let index = 0; index < array.length; index++){
+      arrayItems.push(await callback(array[index], index, array));
+    }
+    return arrayItems;
+  }
 }
