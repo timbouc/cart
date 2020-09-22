@@ -11,6 +11,7 @@ import { InvalidConfig, DriverNotSupported } from './exceptions';
 import { CartConfig, CartStorageConfig, StorageSingleDriverConfig, CartContent, CartInputItem, CartItem, CartUpdateOption, CartCondition, } from './types';
 import { MethodNotSupported } from './exceptions';
 import { resolve } from 'path';
+import { has } from 'lodash'
 
 interface StorageConstructor<T extends Storage = Storage> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -279,7 +280,7 @@ export default class Cart {
               optionQuantity = options.quantity.value;
             }
 
-            if(options.quantity.relative){
+            if(has(options, 'quantity.relative')){
               existingItem.quantity += optionQuantity;
             } else {
               existingItem.quantity = optionQuantity;
