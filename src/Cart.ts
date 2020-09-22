@@ -311,7 +311,7 @@ export default class Cart {
         if(existingItem){
           resolve(existingItem);
         } else {
-          reject('Item id does not exist');
+          throw 'Item id does not exist';
         }
       }catch(error){
 				reject(error);
