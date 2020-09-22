@@ -70,10 +70,10 @@ export interface CartUpdateOption {
 export interface CartCondition {
 	name: string;
 	type: 'tax' | 'voucher' | 'sale' | 'discount' | 'coupon';
-    target: string | 'subtotal' | 'total';
+  target: string | 'subtotal' | 'total';
 	value: string|number;
 	order: number;
-    attributes: {
-		[key: string]: any
-    };
+  attributes: {
+    [key: string]: any
+  };
 }
