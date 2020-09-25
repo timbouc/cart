@@ -40,7 +40,7 @@ export interface CartItemOption{
 }
 
 export interface CartInputItem {
-	_id: string|number;
+	_id?: string|number;
 	id: string|number;
 	name: string;
 	price: string|number;

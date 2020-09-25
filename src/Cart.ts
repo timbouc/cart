@@ -7,7 +7,7 @@
 
 import { LocalFileCartStorage } from './LocalFileCartStorage';
 import Storage from './CartStorage';
-import { InvalidConfig, DriverNotSupported } from './exceptions';
+import { InvalidConfig, DriverNotSupported, OperationFailed } from './exceptions';
 import { CartConfig, CartStorageConfig, StorageSingleDriverConfig, CartContent, CartInputItem, CartItem, CartUpdateOption, CartCondition, } from './types';
 import { MethodNotSupported } from './exceptions';
 import { resolve } from 'path';
@@ -166,87 +166,96 @@ export default class Cart {
 
 		return new Promise(async (resolve, reject) => {
 			try{
-        const instance = await this.content();
+				const instance = await this.content();
 
 				if(!(product instanceof Array)){
 					product = [product];
 				}
-        let items: Array<CartItem> = [];
-        let existingItems: Array<CartItem> = [];
-        let existingItemOptions: { id: number | string, options: CartUpdateOption }[] = [];
-        
+				let items: Array<CartItem> = [];
+				let existingItems: Array<CartItem> = [];
+				let existingItemOptions: { id: number | string, options: CartUpdateOption }[] = [];
+
 				product.forEach(p => {
 					// Check if item already exists then increment by quantity or 1,
-          //		 checking against `id` and `options`
-          let existingItem = instance.items.find(item => 
-            (item.id == p.id && 
-            (!item.options && !p.options) || 
-            ((item.options && p.options) && item.options!.length == p.options!.length &&
-            (item.options!.every(option => p.options!.indexOf(option) > -1))))
-          );
+					//		 checking against `id` and `options`
+					let existingItem = instance.items.find(item => (
+						p.id == item.id &&
+						p.price == item.price &&
+						(
+							(!p.options?.length) ||
+							(item.options!.length && item.options!.length == p.options!.length &&
+								item.options!.every(option => p.options!.indexOf(option) > -1))
+						)
+					))
+					// let existingItem = instance.items.find(item =>
+					// 	(item.id == p.id &&
+					// 	(!item.options && !p.options) ||
+					// 	((item.options && p.options) && item.options!.length == p.options!.length &&
+					// 	(item.options!.every(option => p.options!.indexOf(option) > -1))))
+					// );
 
-          let itemQuantity : number = 0;
-          let itemPrice : number = 0;
+					let itemQuantity : number = 0;
+					let itemPrice : number = 0;
 
-          // Parse and specify default quantity of 1
-          if(p.quantity && typeof p.quantity == 'string'){
-            itemQuantity = parseInt(p.quantity);
-          } else if(p.quantity && typeof p.quantity == 'number'){
-            itemQuantity = p.quantity;
-          } else {
-            itemQuantity = 1;
-          }
+					// Parse and specify default quantity of 1
+					if(p.quantity && typeof p.quantity == 'string'){
+						itemQuantity = parseInt(p.quantity);
+					} else if(p.quantity && typeof p.quantity == 'number'){
+						itemQuantity = p.quantity;
+					} else {
+						itemQuantity = 1;
+					}
 
-          // Parse and round to 2 decimal places
-          if(p.price && typeof p.price == 'string'){
-            itemPrice = Math.round(parseFloat(p.price) * 100) / 100;
-          } else if(p.price && typeof p.price == 'number'){
-            itemPrice = Math.round(p.price * 100) / 100;
-          } else {
-            throw 'Price is undefined';
-          }
+					// Parse and round to 2 decimal places
+					if(p.price && typeof p.price == 'string'){
+						itemPrice = Math.round(parseFloat(p.price) * 100) / 100;
+					} else if(p.price && typeof p.price == 'number'){
+						itemPrice = Math.round(p.price * 100) / 100;
+					} else {
+						throw OperationFailed.addToCart('Price is undefined');
+					}
 
-          if(existingItem){
-            let itemOptions : CartUpdateOption;
-            
-            if(itemQuantity){
-              itemOptions = {
-                name: existingItem.name,
-                price: existingItem.price,
-                quantity: { value: itemQuantity, relative: true}
-              };
-            } else {
-              throw 'Quantity is undefined';
-            }
-            
-            existingItemOptions.push({id: existingItem.id, options: itemOptions});
-          } else {
-            items.push({
-              _id: String(p._id?? instance.items.length + 1),
-              id: String(p.id),
-              name: p.name,
-              price: itemPrice,
-              quantity: itemQuantity,
-              options: p.options || [],
-            });
-          }
+					if(existingItem){
+						let itemOptions : CartUpdateOption;
+
+						if(itemQuantity){
+							itemOptions = {
+								name: existingItem.name,
+								price: existingItem.price,
+								quantity: { value: itemQuantity, relative: true}
+							};
+						} else {
+							throw OperationFailed.addToCart('Quantity is undefined');
+						}
+
+						existingItemOptions.push({id: existingItem.id, options: itemOptions});
+					} else {
+						items.push({
+							_id: String(p._id?? instance.items.length + 1),
+							id: String(p.id),
+							name: p.name,
+							price: itemPrice,
+							quantity: itemQuantity,
+							options: p.options || [],
+						});
+					}
 
 					if(p.conditions){
 						Array.prototype.push.apply(instance.conditions, p.conditions);
 					}
 				});
 
-        // Put new items into database
+				// Put new items into database
 				Array.prototype.push.apply(instance.items, items);
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
-        // Update existing items in database
-        // existingItemOptions.forEach(item => {
-        //   existingItems.push(await this.update(item.id, item.options));
-        // })
+				// Update existing items in database
+				// existingItemOptions.forEach(item => {
+				//   existingItems.push(await this.update(item.id, item.options));
+				// })
 
-        // Merge new and existing items together to return
-        items = items.concat(existingItems);
+				// Merge new and existing items together to return
+				items = items.concat(existingItems);
 
 				resolve(items.length>1? items : items[0]);
 			}catch(error){
@@ -259,36 +268,36 @@ export default class Cart {
 	 * Update a cart item
 	 */
 	public update(id: string|number, options: CartUpdateOption): Promise<CartItem> {
-    const storage = this.storage();
+    	const storage = this.storage();
 
 		return new Promise(async (resolve, reject) => {
 			try{
-        const instance = await this.content();
-        const existingItem = instance.items.find(item => item.id == id);
+				const instance = await this.content();
+				const existingItem = instance.items.find(item => item.id == id);
 
-        if(existingItem){
-          existingItem.name = options.name;
-          existingItem.price = options.price;
+				if(existingItem){
+					existingItem.name = options.name;
+					existingItem.price = options.price;
 
-          if (typeof options.quantity === 'number') {
-            existingItem.quantity = options.quantity;
-          } else {
-            let optionQuantity : number = 0;
-            if(typeof options.quantity.value === 'string'){
-              optionQuantity = parseInt(options.quantity.value); // Round to 2 decimal places
-            } else {
-              optionQuantity = options.quantity.value;
-            }
+					if (typeof options.quantity === 'number') {
+						existingItem.quantity = options.quantity;
+					} else {
+						let optionQuantity : number = 0;
+						if(typeof options.quantity.value === 'string'){
+							optionQuantity = parseInt(options.quantity.value); // Round to 2 decimal places
+						} else {
+							optionQuantity = options.quantity.value;
+						}
 
-            if(options.quantity.relative){
-              existingItem.quantity += optionQuantity;
-            } else {
-              existingItem.quantity = optionQuantity;
-            }
-          }
-        } else {
-          throw 'Item id does not exist';
-        }
+						if(options.quantity.relative){
+							existingItem.quantity += optionQuantity;
+						} else {
+							existingItem.quantity = optionQuantity;
+						}
+					}
+				} else {
+					throw OperationFailed.cartUpdate('Item id does not exist');
+				}
 
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
@@ -346,7 +355,16 @@ export default class Cart {
 	 */
 	public empty(): Promise<boolean> {
 		return new Promise(async resolve => {
-			resolve(!(await this.items()).length)
+			resolve(!(await this.count()))
+		});
+	}
+
+	/**
+	 * Count number of items in cart
+	 */
+	public count(): Promise<number> {
+		return new Promise(async resolve => {
+			resolve((await this.items()).length)
 		});
 	}
 
@@ -380,12 +398,12 @@ export default class Cart {
 	 */
 	public items(): Promise<Array<CartItem>> {
 		return new Promise(async (resolve, reject) => {
-      try {
-        resolve((await this.content()).items)
-      } catch(error) {
-        reject(error);
-      }
-    });
+			try {
+				resolve((await this.content()).items)
+			} catch(error) {
+				reject(error);
+			}
+		});
 	}
 
 	/**
