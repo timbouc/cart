@@ -317,7 +317,7 @@ export default class Cart {
         if(existingItem){
           resolve(existingItem);
         } else {
-          throw 'Item id does not exist';
+          throw OperationFailed.getItem('Item id does not exist');
         }
       }catch(error){
 				reject(error);
@@ -385,7 +385,7 @@ export default class Cart {
         if(matchingCon){
           resolve(matchingCon);
         } else {
-          throw 'Condition does not exist';
+          throw OperationFailed.condition('Condition does not exist');
         }
       }catch(error){
         reject(error);
@@ -405,7 +405,7 @@ export default class Cart {
         const matchingConIndex = instance.conditions.findIndex(con => con.name == name);
 
         if(matchingConIndex < 0){
-          throw 'Condition not found';
+          throw OperationFailed.condition('Condition not found');
         } else {
           // Remove condition at index
           instance.conditions.splice(matchingConIndex, 1);

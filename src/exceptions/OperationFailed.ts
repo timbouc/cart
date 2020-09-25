@@ -13,4 +13,10 @@ export class OperationFailed extends Error {
 	public static cartUpdate(msg: string|null = null): OperationFailed {
 		return new this('Failed to update cart' + msg? `: ${msg}`:'');
 	}
+	public static condition(msg: string|null = null): OperationFailed {
+		return new this('Failed to get condition' + msg? `: ${msg}`:'');
+	}
+	public static getItem(msg: string|null = null): OperationFailed {
+		return new this('Failed to get item' + msg? `: ${msg}`:'');
+	}
 }
