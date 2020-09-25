@@ -75,7 +75,7 @@ describe('Cart Operations', async () => {
 			id: 1,
 			name: 'Product 1',
 			price: 30,
-			quantity: 3
+			quantity: 3 // should accumulate
 		}) as CartItem
 		let i2 = await cart.update(i1._id, {
 			name: 'Product 1',
@@ -86,7 +86,7 @@ describe('Cart Operations', async () => {
 			}
 		}) as CartItem
 
-		expect(i1.quantity).to.equal(3);
-		expect(i2.quantity).to.equal(4);
+		expect(i1.quantity).to.equal(4);
+		expect(i2.quantity).to.equal(5);
 	});
 });

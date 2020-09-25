@@ -217,7 +217,7 @@ export default class Cart {
 								name: existingItem.name,
 								price: existingItem.price,
 								// quantity: { value: itemQuantity, relative: true}
-								quantity: itemQuantity
+								quantity: existingItem.quantity + itemQuantity
 							};
 						} else {
 							throw OperationFailed.addToCart('Quantity is undefined');
@@ -428,16 +428,16 @@ export default class Cart {
 
 		return new Promise(async (resolve, reject) => {
 			try{
-        const instance = await this.content();
-        instance.conditions = [];
+				const instance = await this.content();
+				instance.conditions = [];
 
-        await storage.put(this._session, storage.serialise( this.compute(instance) ));
+				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
-        resolve(true);
-      }catch(error){
-        reject(error);
-      };
-    });
+				resolve(true);
+			}catch(error){
+				reject(error);
+			};
+		});
 	}
 
 	/**
