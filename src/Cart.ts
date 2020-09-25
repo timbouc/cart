@@ -11,7 +11,7 @@ import { InvalidConfig, DriverNotSupported, OperationFailed } from './exceptions
 import { CartConfig, CartStorageConfig, StorageSingleDriverConfig, CartContent, CartInputItem, CartItem, CartUpdateOption, CartCondition, } from './types';
 import { MethodNotSupported } from './exceptions';
 import { resolve } from 'path';
-import { has } from 'lodash'
+import { get, has, isEqual } from 'lodash'
 
 interface StorageConstructor<T extends Storage = Storage> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -184,16 +184,9 @@ export default class Cart {
 						p.price == item.price &&
 						(
 							(!p.options?.length) ||
-							(item.options!.length && item.options!.length == p.options!.length &&
-								item.options!.every(option => p.options!.indexOf(option) > -1))
+							(item.options!.length && item.options!.length == p.options!.length && isEqual(item.options, p.options))
 						)
 					))
-					// let existingItem = instance.items.find(item =>
-					// 	(item.id == p.id &&
-					// 	(!item.options && !p.options) ||
-					// 	((item.options && p.options) && item.options!.length == p.options!.length &&
-					// 	(item.options!.every(option => p.options!.indexOf(option) > -1))))
-					// );
 
 					let itemQuantity : number = 0;
 					let itemPrice : number = 0;
@@ -223,7 +216,8 @@ export default class Cart {
 							itemOptions = {
 								name: existingItem.name,
 								price: existingItem.price,
-								quantity: { value: itemQuantity, relative: true}
+								// quantity: { value: itemQuantity, relative: true}
+								quantity: itemQuantity
 							};
 						} else {
 							throw OperationFailed.addToCart('Quantity is undefined');
@@ -279,20 +273,23 @@ export default class Cart {
 					existingItem.name = options.name;
 					existingItem.price = options.price;
 
-					if (typeof options.quantity === 'number') {
-						existingItem.quantity = options.quantity;
-					} else {
-						let optionQuantity : number = 0;
-						if(typeof options.quantity.value === 'string'){
-							optionQuantity = parseInt(options.quantity.value); // Round to 2 decimal places
+					// Only update quanity if set
+					if(has(options, 'quantity')){
+						if (typeof options.quantity === 'number') {
+							existingItem.quantity = options.quantity;
 						} else {
-							optionQuantity = options.quantity.value;
-						}
+							let optionQuantity : number = 0;
+							if(typeof options.quantity.value === 'string'){
+								optionQuantity = parseInt(options.quantity.value); // Round to 2 decimal places
+							} else {
+								optionQuantity = get(options, 'quantity.value', optionQuantity);
+							}
 
-						if(options.quantity.relative){
-							existingItem.quantity += optionQuantity;
-						} else {
-							existingItem.quantity = optionQuantity;
+							if(get(options, 'quantity.relative', false)){
+								existingItem.quantity += optionQuantity;
+							} else {
+								existingItem.quantity = optionQuantity;
+							}
 						}
 					}
 				} else {
@@ -332,14 +329,14 @@ export default class Cart {
 	 * Apply a condition or conditions to cart
 	 */
 	public apply(condition: CartCondition | Array<CartCondition>): Promise<any> {
-    const storage = this.storage();
+    	const storage = this.storage();
 
 		return new Promise(async (resolve, reject) => {
 			try{
         if(!(condition instanceof Array)){
           condition = [condition];
         }
-        
+
         const instance = await this.content();
         condition.forEach(newCon => {
           const matchingCon = instance.conditions.find(oldCon => oldCon.name == newCon.name);
@@ -364,9 +361,9 @@ export default class Cart {
 	 */
 	public conditions(): Promise<Array<CartCondition>> {
 		return new Promise(async (resolve, reject) => {
-			try{        
+			try{
         const instance = await this.content();
-        
+
         resolve(instance.conditions);
       }catch(error){
         reject(error);
@@ -381,7 +378,7 @@ export default class Cart {
 		const storage = this.storage();
 
 		return new Promise(async (resolve, reject) => {
-			try{        
+			try{
         const instance = await this.content();
         const matchingCon = instance.conditions.find(con => con.name == name);
 
@@ -400,10 +397,10 @@ export default class Cart {
 	 * Remove a cart condition
 	 */
 	public removeCondition(name: string): Promise<boolean> {
-    const storage = this.storage();
+    	const storage = this.storage();
 
 		return new Promise(async (resolve, reject) => {
-			try{        
+			try{
         const instance = await this.content();
         const matchingConIndex = instance.conditions.findIndex(con => con.name == name);
 
@@ -412,9 +409,9 @@ export default class Cart {
         } else {
           // Remove condition at index
           instance.conditions.splice(matchingConIndex, 1);
-  
+
           await storage.put(this._session, storage.serialise( this.compute(instance) ));
-  
+
           resolve(true);
         }
       }catch(error){
@@ -521,8 +518,8 @@ export default class Cart {
 
 		return new Promise(async (resolve, reject) => {
 			try{
-        let instance = await this.content();
-        instance.items = [];
+				let instance = await this.content();
+				instance.items = [];
 
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 

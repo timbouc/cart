@@ -64,8 +64,8 @@ describe('Cart Operations', async () => {
 		expect(await cart.count()).to.equal(2);
 	});
 	it('add to cart and check quantity', async () => {
-		// await cart.clear();
-		await cart.storage().clear()
+		await cart.clear();
+		// await cart.storage().clear()
 		await cart.add({
 			id: 1,
 			name: 'Product 1',
@@ -75,7 +75,7 @@ describe('Cart Operations', async () => {
 			id: 1,
 			name: 'Product 1',
 			price: 30,
-			quantity: 3 // should override
+			quantity: 3
 		}) as CartItem
 		let i2 = await cart.update(i1._id, {
 			name: 'Product 1',
