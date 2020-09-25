@@ -11,6 +11,7 @@ import { InvalidConfig, DriverNotSupported, OperationFailed } from './exceptions
 import { CartConfig, CartStorageConfig, StorageSingleDriverConfig, CartContent, CartInputItem, CartItem, CartUpdateOption, CartCondition, } from './types';
 import { MethodNotSupported } from './exceptions';
 import { resolve } from 'path';
+import { has } from 'lodash'
 
 interface StorageConstructor<T extends Storage = Storage> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -249,10 +250,9 @@ export default class Cart {
 				Array.prototype.push.apply(instance.items, items);
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
-				// Update existing items in database
-				// existingItemOptions.forEach(item => {
-				//   existingItems.push(await this.update(item.id, item.options));
-				// })
+        existingItems = await this.asyncForEach(existingItemOptions, async(item) => {
+          return await this.update(item.id, item.options);
+        });
 
 				// Merge new and existing items together to return
 				items = items.concat(existingItems);
@@ -262,7 +262,7 @@ export default class Cart {
 				reject(error);
 			}
 		})
-	}
+  }
 
 	/**
 	 * Update a cart item
@@ -311,43 +311,136 @@ export default class Cart {
 	/**
 	 * Get cart item
 	 */
-	public get(id: string|number): Promise<CartItem> {
-		throw new MethodNotSupported('get');
+	public get(id: string): Promise<CartItem> {
+		return new Promise(async (resolve, reject) => {
+			try{
+        const instance = await this.content();
+        const existingItem = instance.items.find(item => item.id.localeCompare(id) == 0);
+
+        if(existingItem){
+          resolve(existingItem);
+        } else {
+          throw 'Item id does not exist';
+        }
+      }catch(error){
+				reject(error);
+			}
+    });
 	}
 
 	/**
 	 * Apply a condition or conditions to cart
 	 */
 	public apply(condition: CartCondition | Array<CartCondition>): Promise<any> {
-		throw new MethodNotSupported('condition');
+    const storage = this.storage();
+
+		return new Promise(async (resolve, reject) => {
+			try{
+        if(!(condition instanceof Array)){
+          condition = [condition];
+        }
+        
+        const instance = await this.content();
+        condition.forEach(newCon => {
+          const matchingCon = instance.conditions.find(oldCon => oldCon.name == newCon.name);
+
+          // Add if condition with matching name doesn't already exist
+          if(!matchingCon){
+            instance.conditions.push(newCon);
+          }
+        });
+
+        await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+        resolve(true);
+      }catch(error){
+        reject(error);
+      };
+    });
 	}
 
 	/**
 	 * Get all cart conditions
 	 */
 	public conditions(): Promise<Array<CartCondition>> {
-		throw new MethodNotSupported('conditions');
+		return new Promise(async (resolve, reject) => {
+			try{        
+        const instance = await this.content();
+        
+        resolve(instance.conditions);
+      }catch(error){
+        reject(error);
+      };
+    });
 	}
 
 	/**
 	 * Retrieve a cart condition
 	 */
 	public condition(name: string): Promise<CartCondition> {
-		throw new MethodNotSupported('getCondition');
+		const storage = this.storage();
+
+		return new Promise(async (resolve, reject) => {
+			try{        
+        const instance = await this.content();
+        const matchingCon = instance.conditions.find(con => con.name == name);
+
+        if(matchingCon){
+          resolve(matchingCon);
+        } else {
+          throw 'Condition does not exist';
+        }
+      }catch(error){
+        reject(error);
+      };
+    });
 	}
 
 	/**
 	 * Remove a cart condition
 	 */
-	public removeCondition(name: string): Promise<void> {
-		throw new MethodNotSupported('removeCondition');
+	public removeCondition(name: string): Promise<boolean> {
+    const storage = this.storage();
+
+		return new Promise(async (resolve, reject) => {
+			try{        
+        const instance = await this.content();
+        const matchingConIndex = instance.conditions.findIndex(con => con.name == name);
+
+        if(matchingConIndex < 0){
+          throw 'Condition not found';
+        } else {
+          // Remove condition at index
+          instance.conditions.splice(matchingConIndex, 1);
+  
+          await storage.put(this._session, storage.serialise( this.compute(instance) ));
+  
+          resolve(true);
+        }
+      }catch(error){
+        reject(error);
+      };
+    });
 	}
 
 	/**
 	 * Clear cart conditions
 	 */
-	public clearConditions(name: string): Promise<void> {
-		throw new MethodNotSupported('clearConditions');
+	public clearConditions(): Promise<boolean> {
+		const storage = this.storage();
+
+		return new Promise(async (resolve, reject) => {
+			try{
+        const instance = await this.content();
+        instance.conditions = [];
+
+        await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+        resolve(true);
+      }catch(error){
+        reject(error);
+      };
+    });
 	}
 
 	/**
@@ -424,6 +517,30 @@ export default class Cart {
 	 * Clear cart contents
 	 */
 	public clear(): Promise<boolean> {
-		throw new MethodNotSupported('clear');
+		const storage = this.storage();
+
+		return new Promise(async (resolve, reject) => {
+			try{
+        let instance = await this.content();
+        instance.items = [];
+
+				await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+				resolve(true);
+			}catch(error){
+				reject(false);
+			}
+		})
 	}
+
+	/**
+	 * Generic async for each
+	 */
+  private async asyncForEach<T>(array: T[], callback: (item: T, index: number, allItems: T[]) => any): Promise<any> {
+    let arrayItems : Array<any> = [];
+    for(let index = 0; index < array.length; index++){
+      arrayItems.push(await callback(array[index], index, array));
+    }
+    return arrayItems;
+  }
 }
