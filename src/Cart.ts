@@ -64,8 +64,107 @@ export default class Cart {
 		 * Remember CartCondition.target which applies the condition ammount to the targeted item, subtotal or total
 		 * Remember CartCondition.value which (for a value of 10) can take the form `10`,`-10`,`"10"`,`"+10"`,`"-10"`,`"10%"`
 		 */
+    
+    let itemsValues : Map<string, number> = new Map();
+    Array.from(instance.items).forEach(item => {
+      itemsValues.set(item.id, item.price * item.quantity);
+    });
+
+    instance.subtotal = Array.from(instance.items).reduce((a, b) => a + b.price * b.quantity, 0);
+    instance.total = instance.subtotal;
+
+    // Sort by items first, then subtotals, then totals.
+    // Within each of items, subtotals and totals, sort most importantly by order then, for items only, by target
+    instance.conditions = Array.from(instance.conditions).sort((a, b) => 
+      (
+        (a.target == 'total' && b.target == 'total' && a.order < b.order) ||
+        (a.target != 'total' && b.target == 'total') ||
+        (a.target == 'subtotal' && b.target == 'subtotal' && a.order < b.order) ||
+        (a.target != 'subtotal' && a.target != 'total' && b.target == 'subtotal') ||
+        (a.order < b.order && a.target == b.target) ||
+        (a.order == b.order && a.target < b.target)
+      ) ? -1 : 1
+    );
+
+    let updatedSubtotalAfterItems = false;
+    let updatedTotalAfterSubtotals = false;
+
+    Array.from(instance.conditions).forEach(condition => {
+      let multiplyValue : boolean = false;
+      if(typeof condition.value == 'string'){
+        try {
+          [multiplyValue, condition.value] = this.parseStringConditionValue(condition.value);
+        } catch(error){
+          throw OperationFailed.compute(`Failed to compute after parse error: ${error}`);
+        }
+      }
+
+      if(condition.target == 'subtotal'){
+        // Check subtotal has been recalculated after all item prices updated
+        if(!updatedSubtotalAfterItems){
+          instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b, 0);
+          updatedSubtotalAfterItems = true;
+        }
+
+        instance.subtotal = this.updatePrice(instance.subtotal, multiplyValue, condition.value);
+      } else if(condition.target == 'total'){
+        if(!updatedTotalAfterSubtotals){
+          // Check total has been reset after subtotal updated
+          instance.total = instance.subtotal;
+          updatedTotalAfterSubtotals = true;
+        }
+
+        instance.total = this.updatePrice(instance.total, multiplyValue, condition.value);
+      } else {
+        let itemPrice = itemsValues.get(condition.target);
+        if(!itemPrice){
+          throw OperationFailed.getItem('Item price was not found');
+        }
+        itemsValues.set(condition.target, this.updatePrice(itemPrice, multiplyValue, condition.value));
+      }
+    });
+
+    // Once again, check subtotal and totals have been calculated (no conditions must have been applied)
+    if(!updatedSubtotalAfterItems){
+      instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b, 0);
+    }
+    if(!updatedTotalAfterSubtotals){
+      instance.total = instance.subtotal;
+    }
+
 		return instance;
-	}
+  }
+
+	/**
+	 * Perform multiply or add operation on price
+	 */
+  private updatePrice(initialPrice: number, multiplyValue: boolean, change: number): number {
+    if(multiplyValue){
+      return initialPrice + initialPrice * change;
+    }
+    return initialPrice + change;
+  }
+  
+  private parseStringConditionValue(value: string): [boolean, number] {
+    try {
+      if(value.includes('%')){
+        if(!value.match('^\d+%?$')){
+          throw OperationFailed.parseString(`Invalid character(s) in condition value: ${value}`);
+        }
+        let valueParts = value.split('%');
+        valueParts = valueParts.filter(el => {
+          return el != '' && el != ' ' && el != null;
+        });
+        if(valueParts.length == 1){
+          return [true, parseInt(valueParts[0])];
+        }
+        throw OperationFailed.parseString(`Invalid percentage: ${value}`);
+      }
+      return [false, parseInt(value)];
+    } catch(error){
+      throw OperationFailed.parseString(`Invalid condition value: ${value}`);
+    }
+  }
 
 	/**
 	 * Get the instantiated storages
@@ -262,8 +361,8 @@ export default class Cart {
 	 * Update a cart item
 	 */
 	public update(id: string|number, options: CartUpdateOption): Promise<CartItem> {
-    	const storage = this.storage();
-
+    const storage = this.storage();
+    
 		return new Promise(async (resolve, reject) => {
 			try{
 				const instance = await this.content();
@@ -500,14 +599,30 @@ export default class Cart {
 	 * Get cart subtotal
 	 */
 	public subtotal(): Promise<number> {
-		throw new MethodNotSupported('subtotal');
+		return new Promise(async (resolve, reject) => {
+			try{        
+        const instance = await this.content();
+
+        resolve(instance.subtotal);
+      }catch(error){
+        reject(error);
+      };
+    });
 	}
 
 	/**
 	 * Get cart total
 	 */
 	public total(): Promise<number> {
-		throw new MethodNotSupported('total');
+		return new Promise(async (resolve, reject) => {
+			try{        
+        const instance = await this.content();
+
+        resolve(instance.total);
+      }catch(error){
+        reject(error);
+      };
+    });
 	}
 
 	/**
