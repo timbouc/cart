@@ -64,7 +64,7 @@ export default class Cart {
 		 * Remember CartCondition.target which applies the condition ammount to the targeted item, subtotal or total
 		 * Remember CartCondition.value which (for a value of 10) can take the form `10`,`-10`,`"10"`,`"+10"`,`"-10"`,`"10%"`
 		 */
-    
+
     let itemsValues : Map<string, number> = new Map();
     Array.from(instance.items).forEach(item => {
       itemsValues.set(item.id, item.price * item.quantity);
@@ -75,7 +75,7 @@ export default class Cart {
 
     // Sort by items first, then subtotals, then totals.
     // Within each of items, subtotals and totals, sort most importantly by order then, for items only, by target
-    instance.conditions = Array.from(instance.conditions).sort((a, b) => 
+    instance.conditions = Array.from(instance.conditions).sort((a, b) =>
       (
         (a.target == 'total' && b.target == 'total' && a.order < b.order) ||
         (a.target != 'total' && b.target == 'total') ||
@@ -140,27 +140,19 @@ export default class Cart {
 	 */
   private updatePrice(initialPrice: number, multiplyValue: boolean, change: number): number {
     if(multiplyValue){
-      return initialPrice + initialPrice * change;
+      return initialPrice + (initialPrice * change);
     }
     return initialPrice + change;
   }
-  
+
   private parseStringConditionValue(value: string): [boolean, number] {
+
     try {
-      if(value.includes('%')){
-        if(!value.match('^\d+%?$')){
-          throw OperationFailed.parseString(`Invalid character(s) in condition value: ${value}`);
-        }
-        let valueParts = value.split('%');
-        valueParts = valueParts.filter(el => {
-          return el != '' && el != ' ' && el != null;
-        });
-        if(valueParts.length == 1){
-          return [true, parseInt(valueParts[0])];
-        }
-        throw OperationFailed.parseString(`Invalid percentage: ${value}`);
-      }
-      return [false, parseInt(value)];
+		if(value.endsWith('%')){
+			value = value.substring(0, value.length - 1); // remove %
+			return [true, parseFloat(value) / 100];
+		}
+		return [false, parseFloat(value)];
     } catch(error){
       throw OperationFailed.parseString(`Invalid condition value: ${value}`);
     }
@@ -362,7 +354,7 @@ export default class Cart {
 	 */
 	public update(id: string|number, options: CartUpdateOption): Promise<CartItem> {
     const storage = this.storage();
-    
+
 		return new Promise(async (resolve, reject) => {
 			try{
 				const instance = await this.content();
@@ -600,7 +592,7 @@ export default class Cart {
 	 */
 	public subtotal(): Promise<number> {
 		return new Promise(async (resolve, reject) => {
-			try{        
+			try{
         const instance = await this.content();
 
         resolve(instance.subtotal);
@@ -615,7 +607,7 @@ export default class Cart {
 	 */
 	public total(): Promise<number> {
 		return new Promise(async (resolve, reject) => {
-			try{        
+			try{
         const instance = await this.content();
 
         resolve(instance.total);
