@@ -6,7 +6,7 @@
  */
 
 import path from 'path';
-import { Cart, CartItem } from '../src';
+import { Cart, CartCondition, CartItem } from '../src';
 const { expect } = require('chai');
 
 const session = 'user-1';
@@ -88,5 +88,82 @@ describe('Cart Operations', async () => {
 
 		expect(i1.quantity).to.equal(4);
 		expect(i2.quantity).to.equal(5);
+	});
+	it('check subtotal and total', async () => {
+		await cart.clear();
+		await cart.add({
+			id: 1,
+			name: 'Product 1',
+			price: 30,
+		})
+		await cart.add({
+			id: 1,
+			name: 'Product 1',
+			price: 30,
+			quantity: 3 // should accumulate
+		}) as CartItem
+
+		expect(await cart.subtotal()).to.equal(120);
+		expect(await cart.total()).to.equal(120);
+	});
+	it('check conditions targeted at subtotal', async () => {
+		await cart.clear();
+		await cart.add({
+			id: 1,
+			name: 'Product 1',
+			price: 20,
+		});
+		await cart.apply([
+			{
+				name: '+10% Tax',
+				type: 'voucher',
+				target: 'subtotal',
+				value: '+10%',
+			},
+			{
+				name: '+5% Tax 1',
+				type: 'voucher',
+				target: 'subtotal',
+				value: '+5%',
+			},
+			{
+				name: '-5% Tax 1', // -5% tax 🤣 🤣
+				type: 'voucher',
+				target: 'subtotal',
+				value: '-5%',
+			},
+		] as Array<CartCondition>);
+
+		expect(await cart.total()).to.equal(22);
+	});
+	it('check subtotal and total against conditions', async () => {
+		await cart.clear();
+		await cart.add({
+			id: 1,
+			name: 'Product 1',
+			price: 20,
+		})
+		let i1 = await cart.add({
+			id: 2,
+			name: 'Product 2',
+			price: 40,
+			quantity: 3 // should accumulate
+		}) as CartItem
+		await cart.apply({
+			name: 'Voucher 1 for item ' + i1._id,
+			type: 'voucher',
+			target: i1._id,
+			value: -10, // removes the value `10` from i1
+			// order: 1,
+		} as CartCondition)
+		await cart.apply({
+			name: 'Voucher 2 for item ' + i1._id,
+			type: 'voucher',
+			target: i1._id,
+			value: '-10%', // removes 10% of `40` from i1
+			// order: 1,
+		} as CartCondition)
+
+		expect(await cart.subtotal()).to.equal(126);
 	});
 });
