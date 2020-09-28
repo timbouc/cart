@@ -134,6 +134,7 @@ describe('Cart Operations', async () => {
 			},
 		] as Array<CartCondition>);
 
+		expect(await cart.subtotal()).to.equal(20);
 		expect(await cart.total()).to.equal(22);
 	});
 	it('check subtotal and total against conditions', async () => {
@@ -164,6 +165,7 @@ describe('Cart Operations', async () => {
 			// order: 1,
 		} as CartCondition)
 
-		expect(await cart.subtotal()).to.equal(126);
+		expect(await cart.subtotal()).to.equal(140);
+		expect(await cart.total()).to.equal(126);
 	});
 });
