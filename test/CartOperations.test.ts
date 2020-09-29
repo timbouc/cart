@@ -108,6 +108,7 @@ describe('Cart Operations', async () => {
 	});
 	it('check conditions targeted at subtotal', async () => {
 		await cart.clear();
+		await cart.clearConditions();
 		await cart.add({
 			id: 1,
 			name: 'Product 1',
@@ -139,6 +140,7 @@ describe('Cart Operations', async () => {
 	});
 	it('check subtotal and total against conditions', async () => {
 		await cart.clear();
+		await cart.clearConditions();
 		await cart.add({
 			id: 1,
 			name: 'Product 1',
@@ -164,8 +166,22 @@ describe('Cart Operations', async () => {
 			value: '-10%', // removes 10% of `40` from i1
 			// order: 1,
 		} as CartCondition)
+		await cart.apply({
+			name: 'tax',
+			type: 'voucher',
+			target: 'subtotal',
+			value: '10%', // adds 10% of `98`
+			// order: 1,
+		} as CartCondition)
+		await cart.apply({
+			name: 'use prepaid credit',
+			type: 'voucher',
+			target: 'total',
+			value: '-15', // removes 15 from 107.8
+			// order: 1,
+		} as CartCondition)
 
-		expect(await cart.subtotal()).to.equal(140);
-		expect(await cart.total()).to.equal(126);
+		expect(await cart.subtotal()).to.equal(98);
+		expect(await cart.total()).to.equal(92.8);
 	});
 });
