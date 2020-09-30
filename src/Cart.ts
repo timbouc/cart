@@ -18,7 +18,13 @@ interface StorageConstructor<T extends Storage = Storage> {
 	new (...args: any[]): T;
 }
 
+interface ItemQuantityCost {
+  price: number,
+  quantity: number
+}
+
 export default class Cart {
+
 	/**
 	 * Default storage.
 	 */
@@ -65,31 +71,48 @@ export default class Cart {
 		 * Remember CartCondition.value which (for a value of 10) can take the form `10`,`-10`,`"10"`,`"+10"`,`"-10"`,`"10%"`
 		 */
 
-    let itemsValues : Map<string, number> = new Map();
+    let initialItemsValues : Map<string, ItemQuantityCost> = new Map();
+    let itemsValues : Map<string, ItemQuantityCost> = new Map();
     Array.from(instance.items).forEach(item => {
-      itemsValues.set(item.id, item.price * item.quantity);
+      initialItemsValues.set(item.id, {price:item.price, quantity:item.quantity});
+      itemsValues.set(item.id, {price:item.price, quantity:item.quantity});
     });
-
+    
     instance.subtotal = Array.from(instance.items).reduce((a, b) => a + b.price * b.quantity, 0);
     instance.total = instance.subtotal;
+    let initialSubtotal: number = instance.subtotal;
+    let initialTotal: number = instance.total;
 
     // Sort by items first, then subtotals, then totals.
     // Within each of items, subtotals and totals, sort most importantly by order then, for items only, by target
     instance.conditions = Array.from(instance.conditions).sort((a, b) =>
-      (
-        (a.target == 'total' && b.target == 'total' && a.order < b.order) ||
-        (a.target != 'total' && b.target == 'total') ||
-        (a.target == 'subtotal' && b.target == 'subtotal' && a.order < b.order) ||
-        (a.target != 'subtotal' && a.target != 'total' && b.target == 'subtotal') ||
-        (a.order < b.order && a.target == b.target) ||
-        (a.order == b.order && a.target < b.target)
+    (
+      (a.target == 'total' && b.target == 'total' && a.order < b.order) ||
+      (a.target != 'total' && b.target == 'total') ||
+      (a.target == 'subtotal' && b.target == 'subtotal' && a.order < b.order) ||
+      (a.target != 'subtotal' && a.target != 'total' && b.target == 'subtotal') ||
+      (a.order < b.order && a.target == b.target) ||
+      (a.order == b.order && a.target < b.target)
       ) ? -1 : 1
     );
-
-    let updatedSubtotalAfterItems = false;
-    let updatedTotalAfterSubtotals = false;
-
-    Array.from(instance.conditions).forEach(condition => {
+    
+    // Copy conditions so we don't modify instance.conditions and prevent converting strings to numbers
+    // e.g. we prevent '10%', a string, a.k.a multiplication of 0.1, getting converted to 0.1, a number, a.k.a addition of 0.1
+    let conditions : Array<CartCondition> = [];
+    instance.conditions.forEach(condition => {
+      conditions.push({
+        name: condition.name,
+        type: condition.type,
+        target: condition.target,
+        value: condition.value,
+        order: condition.order,
+        attributes: condition.attributes
+      });
+    });
+    let updatedSubtotalAfterItems: boolean = false;
+    let updatedTotalAfterSubtotals: boolean = false;
+      
+    Array.from(conditions).forEach(condition => {
       let multiplyValue : boolean = false;
       if(typeof condition.value == 'string'){
         try {
@@ -102,34 +125,42 @@ export default class Cart {
       if(condition.target == 'subtotal'){
         // Check subtotal has been recalculated after all item prices updated
         if(!updatedSubtotalAfterItems){
-          instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b, 0);
+          instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b.price * b.quantity, 0);
+          initialSubtotal = instance.subtotal;
           updatedSubtotalAfterItems = true;
         }
 
-        instance.subtotal = this.updatePrice(instance.subtotal, multiplyValue, condition.value);
+        instance.subtotal = this.updatePrice(initialSubtotal, instance.subtotal, multiplyValue, condition.value);
       } else if(condition.target == 'total'){
         if(!updatedTotalAfterSubtotals){
           // Check total has been reset after subtotal updated
           instance.total = instance.subtotal;
+          initialTotal = instance.total;
           updatedTotalAfterSubtotals = true;
         }
 
-        instance.total = this.updatePrice(instance.total, multiplyValue, condition.value);
+        instance.total = this.updatePrice(initialTotal, instance.total, multiplyValue, condition.value);
       } else {
         let itemPrice = itemsValues.get(condition.target);
-        if(!itemPrice){
+        let initialItemPrice = initialItemsValues.get(condition.target);
+        if(!itemPrice || !initialItemPrice){
           throw OperationFailed.getItem('Item price was not found');
         }
-        itemsValues.set(condition.target, this.updatePrice(itemPrice, multiplyValue, condition.value));
+        itemsValues.set(condition.target, {
+          price: this.updatePrice(initialItemPrice.price, itemPrice.price, multiplyValue, condition.value),
+          quantity: initialItemPrice.quantity
+        });
       }
     });
-
-    // Once again, check subtotal and totals have been calculated (no conditions must have been applied)
-    if(!updatedSubtotalAfterItems){
-      instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b, 0);
-    }
+    
+    // At this stage, subtotal has been set temporarily to the value with all vouchers and taxes targeted
+    // towards subtotal, in order to determine the total. We set total to this modified subtotal,
+    // then recalculate subtotal as the sum of all items
     if(!updatedTotalAfterSubtotals){
       instance.total = instance.subtotal;
+    }
+    if(updatedSubtotalAfterItems){
+      instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b.price * b.quantity, 0);
     }
 
 		return instance;
@@ -137,22 +168,22 @@ export default class Cart {
 
 	/**
 	 * Perform multiply or add operation on price
+   * Percentages are calculated based on original price of item, subtotal or total
 	 */
-  private updatePrice(initialPrice: number, multiplyValue: boolean, change: number): number {
+  private updatePrice(initialPrice: number, currentPrice: number, multiplyValue: boolean, change: number): number {
     if(multiplyValue){
-      return initialPrice + (initialPrice * change);
+      return currentPrice + (initialPrice * change);
     }
-    return initialPrice + change;
+    return currentPrice + change;
   }
 
   private parseStringConditionValue(value: string): [boolean, number] {
-
     try {
-		if(value.endsWith('%')){
-			value = value.substring(0, value.length - 1); // remove %
-			return [true, parseFloat(value) / 100];
-		}
-		return [false, parseFloat(value)];
+      if(value.endsWith('%')){
+        value = value.substring(0, value.length - 1); // remove %
+        return [true, parseFloat(value) / 100];
+      }
+		  return [false, parseFloat(value)];
     } catch(error){
       throw OperationFailed.parseString(`Invalid condition value: ${value}`);
     }
@@ -332,7 +363,7 @@ export default class Cart {
 				});
 
 				// Put new items into database
-				Array.prototype.push.apply(instance.items, items);
+        Array.prototype.push.apply(instance.items, items);
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
         existingItems = await this.asyncForEach(existingItemOptions, async(item) => {
@@ -385,8 +416,8 @@ export default class Cart {
 					}
 				} else {
 					throw OperationFailed.cartUpdate('Item id does not exist');
-				}
-
+        }
+        
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
 				resolve(existingItem);
