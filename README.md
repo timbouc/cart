@@ -72,8 +72,7 @@ cart.session(user_id)
 <details>
 <summary markdown="span"><code>add(item: CartInputItem|Array&lt;CartInputItem&gt;): Promise&lt;CartItem|Array<CartItem>&gt;</code></summary>
 
-This method will append the content to the file at the location.
-If the file doesn't exist yet, it will be created.
+Add an item or an array of items to cart
 
 ```javascript
 // add one item to cart
@@ -111,13 +110,14 @@ const [item1, item2] = await cart.add([
 <details>
 <summary markdown="span"><code>update(item_id: number|string, options: object): Promise&lt;CartItem&gt;</code></summary>
 
+Update a cart item. Accumulates quantity by default but override can be specified
+
 ```typescript
 // new item price, price can also be a string format like so: '98.67'
 cart.update(456, {
     name: 'New Item Name',
     price: 99.99,
 });
-
 
 // update a product's quantity
 cart.update(456, {
@@ -147,6 +147,7 @@ cart.update(456, {
 
 
 ```javascript
+// Get cart item
 const item = await cart.get(item_id);
 ```
 
@@ -155,6 +156,8 @@ const item = await cart.get(item_id);
 <details>
 <summary markdown="span"><code>apply(condition: CartCondition | Array&lt;CartCondition&gt;): Promise&lt;any&gt;</code></summary>
 
+Appy a cart condition or an array of conditions. Conditions are used to account for discounts, taxes and miscelleneous values.
+The field `target` specified the entity the condition applied to. This value can be `total`, `subtotal` or an item ID.
 
 ```javascript
 const item = await cart.apply({
@@ -239,6 +242,8 @@ await cart.count()
 
 <details>
 <summary markdown="span"><code>content(): Promise&lt;CartContent&gt;</code></summary>
+
+Return the cart content.
 
 ```javascript
 // Get cart contents
