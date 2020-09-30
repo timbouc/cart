@@ -77,7 +77,7 @@ export default class Cart {
       initialItemsValues.set(item.id, {price:item.price, quantity:item.quantity});
       itemsValues.set(item.id, {price:item.price, quantity:item.quantity});
     });
-    
+
     instance.subtotal = Array.from(instance.items).reduce((a, b) => a + b.price * b.quantity, 0);
     instance.total = instance.subtotal;
     let initialSubtotal: number = instance.subtotal;
@@ -95,7 +95,7 @@ export default class Cart {
       (a.order == b.order && a.target < b.target)
       ) ? -1 : 1
     );
-    
+
     // Copy conditions so we don't modify instance.conditions and prevent converting strings to numbers
     // e.g. we prevent '10%', a string, a.k.a multiplication of 0.1, getting converted to 0.1, a number, a.k.a addition of 0.1
     let conditions : Array<CartCondition> = [];
@@ -111,7 +111,7 @@ export default class Cart {
     });
     let updatedSubtotalAfterItems: boolean = false;
     let updatedTotalAfterSubtotals: boolean = false;
-      
+
     Array.from(conditions).forEach(condition => {
       let multiplyValue : boolean = false;
       if(typeof condition.value == 'string'){
@@ -152,7 +152,7 @@ export default class Cart {
         });
       }
     });
-    
+
     // At this stage, subtotal has been set temporarily to the value with all vouchers and taxes targeted
     // towards subtotal, in order to determine the total. We set total to this modified subtotal,
     // then recalculate subtotal as the sum of all items
@@ -177,17 +177,17 @@ export default class Cart {
     return currentPrice + change;
   }
 
-  private parseStringConditionValue(value: string): [boolean, number] {
-    try {
-      if(value.endsWith('%')){
-        value = value.substring(0, value.length - 1); // remove %
-        return [true, parseFloat(value) / 100];
-      }
-		  return [false, parseFloat(value)];
-    } catch(error){
-      throw OperationFailed.parseString(`Invalid condition value: ${value}`);
-    }
-  }
+	private parseStringConditionValue(value: string): [boolean, number] {
+		try {
+			if(value.endsWith('%')){
+				value = value.substring(0, value.length - 1); // remove %
+				return [true, parseFloat(value) / 100];
+			}
+			return [false, parseFloat(value)];
+		} catch(error){
+			throw OperationFailed.parseString(`Invalid condition value: ${value}`);
+		}
+	}
 
 	/**
 	 * Get the instantiated storages
@@ -417,7 +417,7 @@ export default class Cart {
 				} else {
 					throw OperationFailed.cartUpdate('Item id does not exist');
         }
-        
+
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
 				resolve(existingItem);

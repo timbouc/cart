@@ -168,14 +168,14 @@ describe('Cart Operations', async () => {
 		} as CartCondition)
 		await cart.apply({
 			name: 'tax',
-			type: 'voucher',
+			type: 'tax',
 			target: 'subtotal',
 			value: '10%', // adds 10% of `98`
 			// order: 1,
 		} as CartCondition)
 		await cart.apply({
 			name: 'use prepaid credit',
-			type: 'voucher',
+			type: 'discount',
 			target: 'total',
 			value: '-15', // removes 15 from 107.8
 			// order: 1,

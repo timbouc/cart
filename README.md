@@ -60,6 +60,16 @@ object.
 ### Methods
 
 <details>
+<summary markdown="span"><code>session(session: string): Cart</code></summary>
+
+```javascript
+// Set/switch cart session instance
+cart.session(user_id)
+    .add(...)
+```
+</details>
+
+<details>
 <summary markdown="span"><code>add(item: CartInputItem|Array&lt;CartInputItem&gt;): Promise&lt;CartItem|Array<CartItem>&gt;</code></summary>
 
 This method will append the content to the file at the location.
@@ -68,10 +78,12 @@ If the file doesn't exist yet, it will be created.
 ```javascript
 // add one item to cart
 const item = await cart.add({
+	// _id: 1,        // Preset item id
     id: product.id,
     name: product.name,
     price: product.price,
     quantity: 3, // defaults to one
+    options: conditions as Array<CartCondition>,
     options: options as Array<CartItemOption>,
 })
 
@@ -141,13 +153,124 @@ const item = await cart.get(item_id);
 </details>
 
 <details>
-<summary markdown="span"><code>empty(): Promise&lt;Boolean&gt;</code></summary>
+<summary markdown="span"><code>apply(condition: CartCondition | Array&lt;CartCondition&gt;): Promise&lt;any&gt;</code></summary>
 
 
 ```javascript
-await cart.empty()
+const item = await cart.apply({
+    name: 'Voucher 1',
+    type: 'voucher',
+    target: 1,  // cart item id
+    value: -10, // removes the value `10` from i1
+});
+
+// apply multiple conditions
+const item = await cart.apply([
+    {
+        name: 'Voucher 2',
+        type: 'voucher',
+        target: 2,  // cart item id
+        value: '-10%', // removes 10% of the value of item 2
+    },
+    {
+        name: 'tax',
+        type: 'tax',
+        target: 'subtotal',
+        value: '10%', // adds 10% of subtotal
+    }
+]);
 ```
 
+</details>
+
+<details>
+<summary markdown="span"><code>conditions(): Promise&lt;Array&lt;CartCondition&gt;&gt;</code></summary>
+
+```javascript
+// List cart conditions
+await cart.conditions()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>condition(name: string): Promise&lt;CartCondition&gt;</code></summary>
+
+```javascript
+// Get condition
+await cart.condition('Voucher 2')
+```
+</details>
+
+<details>
+<summary markdown="span"><code>removeCondition(name: string): Promise&lt;Boolean&gt;</code></summary>
+
+```javascript
+// Remove condition
+await cart.removeCondition('Voucher 2')
+```
+</details>
+
+<details>
+<summary markdown="span"><code>clearConditions(): Promise&lt;Boolean&gt;</code></summary>
+
+```javascript
+// Clear all cart conditions
+await cart.clearConditions()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>empty(): Promise&lt;Boolean&gt;</code></summary>
+
+```javascript
+// If cart is empty
+await cart.empty()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>count(): Promise&lt;number&gt;</code></summary>
+
+```javascript
+// Count item entries in cart
+await cart.count()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>content(): Promise&lt;CartContent&gt;</code></summary>
+
+```javascript
+// Get cart contents
+await cart.content()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>items(): Promise&lt;Array&lt;CartItem&gt;&gt;</code></summary>
+
+```javascript
+// List cart items
+await cart.items()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>subtotal(): Promise&lt;number&gt;</code></summary>
+
+```javascript
+// Get cart subtotal
+await cart.subtotal()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>total(): Promise&lt;number&gt;</code></summary>
+
+```javascript
+// Get cart total
+await cart.total()
+```
 </details>
 
 <details>
@@ -156,7 +279,24 @@ await cart.empty()
 ```javascript
 await cart.clear()
 ```
+</details>
 
+<details>
+<summary markdown="span"><code>storage&lt;T extends Storage = Storage&gt;(name?: string): T</code></summary>
+
+```javascript
+// Get the storage instance
+const storage = cart.storage()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>drivers(): Map&lt;string, StorageConstructor&lt;Storage&gt;&gt;</code></summary>
+
+```javascript
+// Get the registered drivers
+const drivers = cart.drivers()
+```
 </details>
 
 ## Contribution Guidelines
