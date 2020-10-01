@@ -1,17 +1,23 @@
 {
   "name": "@timbouc/cart",
-  "version": "0.1.3",
-  "description": "A flexible and fluent way to manage cart.",
+  "version": "0.1.4",
+  "description": "A flexible and fluent way to manage shopping carts.",
   "homepage": "https://github.com/timbouc/cart#readme",
   "license": "MIT",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "keywords": [
+    "timbouc",
     "cart",
-    "filesystem",
+    "shopping cart",
+    "ecommerce",
+    "store",
+    "local storage",
     "redis",
+    "database",
     "promise",
-    "async"
+    "async",
+    "typescript"
   ],
   "author": "Augustus Okoye <agstrscntw3@gmail.com>",
   "contributors": [
@@ -22,8 +28,8 @@
     "build"
   ],
   "scripts": {
-    "prepare": "npm run test && npm run build",
-    "build": "tsc -b tsconfig.json",
+    "prepublishOnly": "npm run test",
+    "prepare": "tsc -b tsconfig.json",
     "lint": "eslint --ext js,ts src/*",
     "test": "mocha -r ts-node/register test/*.test.ts"
   },

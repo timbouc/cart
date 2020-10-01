@@ -2,6 +2,13 @@
 
 A Shopping Cart Implementation for Node.js and browsers.
 
+:yellow_heart: **Features**
+
+* Pluggable storage drivers
+* Manage vouchers and miscellaneous values with Conditions 
+* Sync frontend and backend instances with remove storage connection
+* Comes with a default local storage (Node.js)
+
 
 
 ## Getting Started
