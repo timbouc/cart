@@ -59,12 +59,13 @@ export interface CartItem {
 }
 
 export interface CartUpdateOption {
-	name: string;
-	price: number;
-	quantity: number | {
+	name?: string;
+	price?: number;
+	quantity?: number | {
 		relative: boolean;
 		value: string|number;
 	};
+	options?: Array<CartItemOption>;
 }
 
 export interface CartCondition {

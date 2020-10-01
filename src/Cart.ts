@@ -392,8 +392,9 @@ export default class Cart {
 				const existingItem = instance.items.find(item => item.id == id);
 
 				if(existingItem){
-					existingItem.name = options.name;
-					existingItem.price = options.price;
+					if(options.name) existingItem.name = options.name;
+					if(options.price) existingItem.price = options.price;
+					if(options.options) existingItem.options = options.options;
 
 					// Only update quanity if set
 					if(has(options, 'quantity')){
@@ -401,7 +402,7 @@ export default class Cart {
 							existingItem.quantity = options.quantity;
 						} else {
 							let optionQuantity : number = 0;
-							if(typeof options.quantity.value === 'string'){
+							if(typeof options.quantity?.value === 'string'){
 								optionQuantity = parseInt(options.quantity.value); // Round to 2 decimal places
 							} else {
 								optionQuantity = get(options, 'quantity.value', optionQuantity);

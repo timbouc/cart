@@ -18,7 +18,7 @@ $ yarn add @timbouc/cart
 Instantiate with a [configuration](examples/config.ts).
 
 ```javascript
-const { Cart } = require('@timbouc/cart');
+import { Cart } from '@timbouc/cart';
 const cart = new Cart(context.uudid, config);
 ```
 
@@ -47,6 +47,8 @@ cart.driver('pg')
     .session(session + ':wishlist') // can also change session (user)
 	.add(...)
 ```
+
+See [RedisStorage example](examples/RedisStorage.ts) from custom storage.
 
 
 
@@ -157,7 +159,7 @@ const item = await cart.get(item_id);
 <summary markdown="span"><code>apply(condition: CartCondition | Array&lt;CartCondition&gt;): Promise&lt;any&gt;</code></summary>
 
 Appy a cart condition or an array of conditions. Conditions are used to account for discounts, taxes and miscelleneous values.
-The field `target` specified the entity the condition applied to. This value can be `total`, `subtotal` or an item ID.
+The field `target` specified the entity the condition applies to. This value can be `total`, `subtotal` or an item ID.
 
 ```javascript
 const item = await cart.apply({
