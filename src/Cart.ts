@@ -71,97 +71,97 @@ export default class Cart {
 		 * Remember CartCondition.value which (for a value of 10) can take the form `10`,`-10`,`"10"`,`"+10"`,`"-10"`,`"10%"`
 		 */
 
-    let initialItemsValues : Map<string, ItemQuantityCost> = new Map();
-    let itemsValues : Map<string, ItemQuantityCost> = new Map();
-    Array.from(instance.items).forEach(item => {
-      initialItemsValues.set(item.id, {price:item.price, quantity:item.quantity});
-      itemsValues.set(item.id, {price:item.price, quantity:item.quantity});
-    });
+		let initialItemsValues : Map<string, ItemQuantityCost> = new Map();
+		let itemsValues : Map<string, ItemQuantityCost> = new Map();
+		Array.from(instance.items).forEach(item => {
+		initialItemsValues.set(item.id, {price:item.price, quantity:item.quantity});
+		itemsValues.set(item.id, {price:item.price, quantity:item.quantity});
+		});
 
-    instance.subtotal = Array.from(instance.items).reduce((a, b) => a + b.price * b.quantity, 0);
-    instance.total = instance.subtotal;
-    let initialSubtotal: number = instance.subtotal;
-    let initialTotal: number = instance.total;
+		instance.subtotal = Array.from(instance.items).reduce((a, b) => a + b.price * b.quantity, 0);
+		instance.total = instance.subtotal;
+		let initialSubtotal: number = instance.subtotal;
+		let initialTotal: number = instance.total;
 
-    // Sort by items first, then subtotals, then totals.
-    // Within each of items, subtotals and totals, sort most importantly by order then, for items only, by target
-    instance.conditions = Array.from(instance.conditions).sort((a, b) =>
-    (
-      (a.target == 'total' && b.target == 'total' && a.order < b.order) ||
-      (a.target != 'total' && b.target == 'total') ||
-      (a.target == 'subtotal' && b.target == 'subtotal' && a.order < b.order) ||
-      (a.target != 'subtotal' && a.target != 'total' && b.target == 'subtotal') ||
-      (a.order < b.order && a.target == b.target) ||
-      (a.order == b.order && a.target < b.target)
-      ) ? -1 : 1
-    );
+		// Sort by items first, then subtotals, then totals.
+		// Within each of items, subtotals and totals, sort most importantly by order then, for items only, by target
+		instance.conditions = Array.from(instance.conditions).sort((a, b) =>
+			(
+				(a.target == 'total' && b.target == 'total' && get(a, 'order', 0) < get(b, 'order', 0)) ||
+				(a.target != 'total' && b.target == 'total') ||
+				(a.target == 'subtotal' && b.target == 'subtotal' && get(a, 'order', 0) < get(b, 'order', 0)) ||
+				(a.target != 'subtotal' && a.target != 'total' && b.target == 'subtotal') ||
+				(get(a, 'order', 0) < get(b, 'order', 0) && a.target == b.target) ||
+				(get(a, 'order', 0) == get(b, 'order', 0) && a.target < b.target)
+			) ? -1 : 1
+		);
 
-    // Copy conditions so we don't modify instance.conditions and prevent converting strings to numbers
-    // e.g. we prevent '10%', a string, a.k.a multiplication of 0.1, getting converted to 0.1, a number, a.k.a addition of 0.1
-    let conditions : Array<CartCondition> = [];
-    instance.conditions.forEach(condition => {
-      conditions.push({
-        name: condition.name,
-        type: condition.type,
-        target: condition.target,
-        value: condition.value,
-        order: condition.order,
-        attributes: condition.attributes
-      });
-    });
-    let updatedSubtotalAfterItems: boolean = false;
-    let updatedTotalAfterSubtotals: boolean = false;
+		// Copy conditions so we don't modify instance.conditions and prevent converting strings to numbers
+		// e.g. we prevent '10%', a string, a.k.a multiplication of 0.1, getting converted to 0.1, a number, a.k.a addition of 0.1
+		let conditions : Array<CartCondition> = [];
+		instance.conditions.forEach(condition => {
+		conditions.push({
+			name: condition.name,
+			type: condition.type,
+			target: condition.target,
+			value: condition.value,
+			order: condition.order,
+			attributes: condition.attributes
+		});
+		});
+		let updatedSubtotalAfterItems: boolean = false;
+		let updatedTotalAfterSubtotals: boolean = false;
 
-    Array.from(conditions).forEach(condition => {
-      let multiplyValue : boolean = false;
-      if(typeof condition.value == 'string'){
-        try {
-          [multiplyValue, condition.value] = this.parseStringConditionValue(condition.value);
-        } catch(error){
-          throw OperationFailed.compute(`Failed to compute after parse error: ${error}`);
-        }
-      }
+		Array.from(conditions).forEach(condition => {
+		let multiplyValue : boolean = false;
+		if(typeof condition.value == 'string'){
+			try {
+				[multiplyValue, condition.value] = this.parseStringConditionValue(condition.value);
+			} catch(error){
+				throw OperationFailed.compute(`Failed to compute after parse error: ${error}`);
+			}
+		}
 
-      if(condition.target == 'subtotal'){
-        // Check subtotal has been recalculated after all item prices updated
-        if(!updatedSubtotalAfterItems){
-          instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b.price * b.quantity, 0);
-          initialSubtotal = instance.subtotal;
-          updatedSubtotalAfterItems = true;
-        }
+		if(condition.target == 'subtotal'){
+			// Check subtotal has been recalculated after all item prices updated
+			if(!updatedSubtotalAfterItems){
+			instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b.price * b.quantity, 0);
+			initialSubtotal = instance.subtotal;
+			updatedSubtotalAfterItems = true;
+			}
 
-        instance.subtotal = this.updatePrice(initialSubtotal, instance.subtotal, multiplyValue, condition.value);
-      } else if(condition.target == 'total'){
-        if(!updatedTotalAfterSubtotals){
-          // Check total has been reset after subtotal updated
-          instance.total = instance.subtotal;
-          initialTotal = instance.total;
-          updatedTotalAfterSubtotals = true;
-        }
+			instance.subtotal = this.updatePrice(initialSubtotal, instance.subtotal, multiplyValue, condition.value);
+		} else if(condition.target == 'total'){
+			if(!updatedTotalAfterSubtotals){
+			// Check total has been reset after subtotal updated
+			instance.total = instance.subtotal;
+			initialTotal = instance.total;
+			updatedTotalAfterSubtotals = true;
+			}
 
-        instance.total = this.updatePrice(initialTotal, instance.total, multiplyValue, condition.value);
-      } else {
-        let itemPrice = itemsValues.get(condition.target);
-        let initialItemPrice = initialItemsValues.get(condition.target);
-        if(!itemPrice || !initialItemPrice){
-          throw OperationFailed.getItem('Item price was not found');
-        }
-        itemsValues.set(condition.target, {
-          price: this.updatePrice(initialItemPrice.price, itemPrice.price, multiplyValue, condition.value),
-          quantity: initialItemPrice.quantity
-        });
-      }
-    });
+			instance.total = this.updatePrice(initialTotal, instance.total, multiplyValue, condition.value);
+		} else {
+			let itemPrice = itemsValues.get(condition.target);
+			let initialItemPrice = initialItemsValues.get(condition.target);
+			if(!itemPrice || !initialItemPrice){
+			throw OperationFailed.getItem('Item price was not found');
+			}
+			itemsValues.set(condition.target, {
+			price: this.updatePrice(initialItemPrice.price, itemPrice.price, multiplyValue, condition.value),
+			quantity: initialItemPrice.quantity
+			});
+		}
+		});
 
-    // At this stage, subtotal has been set temporarily to the value with all vouchers and taxes targeted
-    // towards subtotal, in order to determine the total. We set total to this modified subtotal,
-    // then recalculate subtotal as the sum of all items
-    if(!updatedTotalAfterSubtotals){
-      instance.total = instance.subtotal;
-    }
-    if(updatedSubtotalAfterItems){
-      instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b.price * b.quantity, 0);
-    }
+		// At this stage, subtotal has been set temporarily to the value with all vouchers and taxes targeted
+		// towards subtotal, in order to determine the total. We set total to this modified subtotal,
+		// then recalculate subtotal as the sum of all items
+		if(!updatedTotalAfterSubtotals){
+		instance.total = instance.subtotal;
+		}
+		if(updatedSubtotalAfterItems){
+		instance.subtotal = Array.from(itemsValues.values()).reduce((a, b) => a + b.price * b.quantity, 0);
+		}
 
 		return instance;
   }
@@ -284,21 +284,19 @@ export default class Cart {
 	/**
 	 * Add single or multiple items to cart
 	 */
-	public add(product: CartInputItem | Array<CartInputItem>): Promise<CartItem | Array<CartItem>> {
+	public add<T extends CartInputItem | Array<CartInputItem>>(product: T): Promise<T extends CartInputItem? CartItem : Array<CartItem>>{
 		const storage = this.storage()
 
 		return new Promise(async (resolve, reject) => {
 			try{
 				const instance = await this.content();
 
-				if(!(product instanceof Array)){
-					product = [product];
-				}
+				let products = (product instanceof Array)? product : [product]
 				let items: Array<CartItem> = [];
 				let existingItems: Array<CartItem> = [];
-				let existingItemOptions: { id: number | string, options: CartUpdateOption }[] = [];
+				let existingItemOptions: { item_id: number | string, options: CartUpdateOption }[] = [];
 
-				product.forEach(p => {
+				products.forEach(p => {
 					// Check if item already exists then increment by quantity or 1,
 					//		 checking against `id` and `options`
 					let existingItem = instance.items.find(item => (
@@ -345,10 +343,10 @@ export default class Cart {
 							throw OperationFailed.addToCart('Quantity is undefined');
 						}
 
-						existingItemOptions.push({id: existingItem.id, options: itemOptions});
+						existingItemOptions.push({item_id: existingItem.item_id, options: itemOptions});
 					} else {
 						items.push({
-							_id: String(p._id?? instance.items.length + 1),
+							item_id: String(p.item_id?? instance.items.length + 1),
 							id: String(p.id),
 							name: p.name,
 							price: itemPrice,
@@ -363,33 +361,33 @@ export default class Cart {
 				});
 
 				// Put new items into database
-        Array.prototype.push.apply(instance.items, items);
-				await storage.put(this._session, storage.serialise( this.compute(instance) ));
+				Array.prototype.push.apply(instance.items, items);
+						await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
-        existingItems = await this.asyncForEach(existingItemOptions, async(item) => {
-          return await this.update(item.id, item.options);
-        });
+				existingItems = await this.asyncForEach(existingItemOptions, async item => {
+					return await this.update(item.item_id, item.options);
+				});
 
 				// Merge new and existing items together to return
 				items = items.concat(existingItems);
 
-				resolve(items.length>1? items : items[0]);
+				resolve(items.length>1? items : items[0] as any);
 			}catch(error){
 				reject(error);
 			}
 		})
-  }
+  	}
 
 	/**
 	 * Update a cart item
 	 */
-	public update(id: string|number, options: CartUpdateOption): Promise<CartItem> {
-    const storage = this.storage();
+	public update(item_id: string|number, options: CartUpdateOption): Promise<CartItem> {
+    	const storage = this.storage();
 
 		return new Promise(async (resolve, reject) => {
 			try{
 				const instance = await this.content();
-				const existingItem = instance.items.find(item => item.id == id);
+				const existingItem = instance.items.find(item => item.item_id == item_id);
 
 				if(existingItem){
 					if(options.name) existingItem.name = options.name;
@@ -416,8 +414,9 @@ export default class Cart {
 						}
 					}
 				} else {
+					console.log({ items: instance.items, item_id })
 					throw OperationFailed.cartUpdate('Item id does not exist');
-        }
+        		}
 
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
@@ -429,13 +428,40 @@ export default class Cart {
 	}
 
 	/**
+	 * Update a cart item
+	 */
+	public remove<T extends string | number | Array<string|number>>(item_id: T): Promise<CartContent>{
+    	const storage = this.storage();
+
+		return new Promise(async (resolve, reject) => {
+			try{
+				const instance = await this.content();
+				let ids = (item_id instanceof Array)? item_id : [item_id]
+
+				ids.forEach(item_id => {
+					var index = instance.items.findIndex(item => item.item_id == item_id);
+					if (index > -1) {
+						instance.items.splice(index, 1);
+					}
+				})
+
+				await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+				resolve(await this.content());
+			}catch(error){
+				reject(error);
+			}
+		})
+	}
+
+	/**
 	 * Get cart item
 	 */
-	public get(id: string): Promise<CartItem> {
+	public get(item_id: string): Promise<CartItem> {
 		return new Promise(async (resolve, reject) => {
 			try{
         const instance = await this.content();
-        const existingItem = instance.items.find(item => item.id.localeCompare(id) == 0);
+        const existingItem = instance.items.find(item => item.item_id.localeCompare(item_id) == 0);
 
         if(existingItem){
           resolve(existingItem);
@@ -456,27 +482,26 @@ export default class Cart {
 
 		return new Promise(async (resolve, reject) => {
 			try{
-        if(!(condition instanceof Array)){
-          condition = [condition];
-        }
 
-        const instance = await this.content();
-        condition.forEach(newCon => {
-          const matchingCon = instance.conditions.find(oldCon => oldCon.name == newCon.name);
+				let conditions = (condition instanceof Array)? condition : [condition]
 
-          // Add if condition with matching name doesn't already exist
-          if(!matchingCon){
-            instance.conditions.push(newCon);
-          }
-        });
+				const instance = await this.content();
+				conditions.forEach(newCon => {
+					const matchingCon = instance.conditions.find(oldCon => oldCon.name == newCon.name);
 
-        await storage.put(this._session, storage.serialise( this.compute(instance) ));
+					// Add if condition with matching name doesn't already exist
+					if(!matchingCon){
+						instance.conditions.push(newCon);
+					}
+				});
 
-        resolve(true);
-      }catch(error){
-        reject(error);
-      };
-    });
+				await storage.put(this._session, storage.serialise( this.compute(instance) ));
+
+				resolve(true);
+			}catch(error){
+				reject(error);
+			};
+		});
 	}
 
 	/**
@@ -502,18 +527,18 @@ export default class Cart {
 
 		return new Promise(async (resolve, reject) => {
 			try{
-        const instance = await this.content();
-        const matchingCon = instance.conditions.find(con => con.name == name);
+				const instance = await this.content();
+				const matchingCon = instance.conditions.find(con => con.name == name);
 
-        if(matchingCon){
-          resolve(matchingCon);
-        } else {
-          throw OperationFailed.condition('Condition does not exist');
-        }
-      }catch(error){
-        reject(error);
-      };
-    });
+				if(matchingCon){
+					resolve(matchingCon);
+				} else {
+					throw OperationFailed.condition('Condition does not exist');
+				}
+			}catch(error){
+				reject(error);
+			};
+		});
 	}
 
 	/**
@@ -585,8 +610,8 @@ export default class Cart {
 	 * Get cart contents
 	 */
 	public content(): Promise<CartContent> {
-		const storage = this.storage();
 		return new Promise(async (resolve, reject) => {
+			const storage = this.storage();
 			try{
 				let raw = await storage.get(this._session);
 				if(raw){

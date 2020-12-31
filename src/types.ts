@@ -40,7 +40,7 @@ export interface CartItemOption{
 }
 
 export interface CartInputItem {
-	_id?: string|number;
+	item_id?: string|number;
 	id: string|number;
 	name: string;
 	price: string|number;
@@ -50,7 +50,7 @@ export interface CartInputItem {
 }
 
 export interface CartItem {
-	_id: string;
+	item_id: string;
 	id: string;
 	name: string;
 	price: number;
@@ -73,8 +73,8 @@ export interface CartCondition {
 	type: 'tax' | 'voucher' | 'sale' | 'discount' | 'coupon';
 	target: string | 'subtotal' | 'total';
 	value: string|number;
-	order: number;
-	attributes: {
+	order?: number;
+	attributes?: {
 		[key: string]: any
 	};
 }

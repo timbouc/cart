@@ -5,8 +5,8 @@ A Shopping Cart Implementation for Node.js and browsers.
 :yellow_heart: **Features**
 
 * Pluggable storage drivers
-* Manage vouchers and miscellaneous values with Conditions 
-* Sync frontend and backend instances with remove storage connection
+* Manage vouchers and miscellaneous values with Conditions
+* Sync frontend and backend instances with remote storage connection
 * Comes with a default local storage (Node.js)
 
 
@@ -86,7 +86,7 @@ Add an item or an array of items to cart
 ```javascript
 // add one item to cart
 const item = await cart.add({
-	// _id: 1,        // Preset item id
+	// item_id: 1,        // Preset item id
     id: product.id,
     name: product.name,
     price: product.price,
@@ -152,6 +152,18 @@ cart.update(456, {
 </details>
 
 <details>
+<summary markdown="span"><code>remove(item_id: number | string | Array&lt;string|number&gt;): Promise&lt;CartContent&gt;</code></summary>
+
+Remove an item or an array of items from cart
+
+```typescript
+cart.remove(456);
+
+```
+
+</details>
+
+<details>
 <summary markdown="span"><code>get(item_id: number_string): Promise&lt;CartItem&gt;</code></summary>
 
 
@@ -159,7 +171,6 @@ cart.update(456, {
 // Get cart item
 const item = await cart.get(item_id);
 ```
-
 </details>
 
 <details>

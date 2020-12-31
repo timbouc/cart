@@ -76,18 +76,26 @@ describe('Cart Operations', async () => {
 			name: 'Product 1',
 			price: 30,
 			quantity: 3 // should accumulate
-		}) as CartItem
-		let i2 = await cart.update(i1._id, {
+		})
+		let i2 = await cart.update(i1.item_id, {
 			name: 'Product 1',
 			price: 30,
 			quantity: { // should NOT override
 				relative: true,
 				value: 1
 			}
-		}) as CartItem
+		})
+		let i3 = await cart.add({
+			id: 2,
+			name: 'Product 2',
+			price: 30,
+			quantity: 3 // should accumulate
+		})
+		await cart.remove(i3.item_id)
 
 		expect(i1.quantity).to.equal(4);
 		expect(i2.quantity).to.equal(5);
+		expect(await cart.count()).to.equal(1);
 	});
 	it('check subtotal and total', async () => {
 		await cart.clear();
@@ -151,35 +159,35 @@ describe('Cart Operations', async () => {
 			name: 'Product 2',
 			price: 40,
 			quantity: 3 // should accumulate
-		}) as CartItem
+		})
 		await cart.apply({
-			name: 'Voucher 1 for item ' + i1._id,
+			name: 'Voucher 1 for item ' + i1.item_id,
 			type: 'voucher',
-			target: i1._id,
+			target: i1.item_id,
 			value: -10, // removes the value `10` from i1
 			// order: 1,
-		} as CartCondition)
+		})
 		await cart.apply({
-			name: 'Voucher 2 for item ' + i1._id,
+			name: 'Voucher 2 for item ' + i1.item_id,
 			type: 'voucher',
-			target: i1._id,
+			target: i1.item_id,
 			value: '-10%', // removes 10% of `40` from i1
 			// order: 1,
-		} as CartCondition)
+		})
 		await cart.apply({
 			name: 'tax',
 			type: 'tax',
 			target: 'subtotal',
 			value: '10%', // adds 10% of `98`
 			// order: 1,
-		} as CartCondition)
+		})
 		await cart.apply({
 			name: 'use prepaid credit',
 			type: 'discount',
 			target: 'total',
 			value: '-15', // removes 15 from 107.8
 			// order: 1,
-		} as CartCondition)
+		})
 
 		expect(await cart.subtotal()).to.equal(98);
 		expect(await cart.total()).to.equal(92.8);
