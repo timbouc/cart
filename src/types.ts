@@ -47,6 +47,7 @@ export interface CartInputItem {
 	quantity?: number|string;
 	conditions?: Array<CartCondition>;
 	options?: Array<CartItemOption>;
+	[key: string]: any,
 }
 
 export interface CartItem {
@@ -56,6 +57,7 @@ export interface CartItem {
 	price: number;
 	quantity: number;
 	options?: Array<CartItemOption>;
+	[key: string]: any,
 }
 
 export interface CartUpdateOption {

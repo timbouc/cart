@@ -346,6 +346,7 @@ export default class Cart {
 						existingItemOptions.push({item_id: existingItem.item_id, options: itemOptions});
 					} else {
 						items.push({
+							...p,
 							item_id: String(p.item_id?? instance.items.length + 1),
 							id: String(p.id),
 							name: p.name,
@@ -414,7 +415,6 @@ export default class Cart {
 						}
 					}
 				} else {
-					console.log({ items: instance.items, item_id })
 					throw OperationFailed.cartUpdate('Item id does not exist');
         		}
 

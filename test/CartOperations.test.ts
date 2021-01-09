@@ -192,4 +192,23 @@ describe('Cart Operations', async () => {
 		expect(await cart.subtotal()).to.equal(98);
 		expect(await cart.total()).to.equal(92.8);
 	});
+	it('add to cart with custom field', async () => {
+		// Add custom field existing item in cart in cart
+		let i1 = await cart.add({
+			id: 1,
+			name: 'Product 1',
+			price: 20,
+			workspace: 'Timbouc',
+		});
+		// Add new item with custom field
+		let i2 = await cart.add({
+			id: 100,
+			name: 'Product 100',
+			price: 20,
+			workspace: 'Timbouc',
+		});
+
+		expect(i1.workspace).not.to.equal('Timbouc');
+		expect(i2.workspace).to.equal('Timbouc');
+	});
 });

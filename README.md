@@ -91,7 +91,7 @@ const item = await cart.add({
     name: product.name,
     price: product.price,
     quantity: 3, // defaults to one
-    options: conditions as Array<CartCondition>,
+    conditions: conditions as Array<CartCondition>,
     options: options as Array<CartItemOption>,
 })
 
@@ -112,6 +112,15 @@ const [item1, item2] = await cart.add([
         price: product2.price,
     },
 ])
+
+// add item with custom field(s)
+// cannot be updated afterwords
+const item = await cart.add({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    workspace: 'Timbouc',
+})
 ```
 
 </details>
