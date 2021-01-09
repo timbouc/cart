@@ -7,6 +7,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## 0.1.6
 
-- upgrade: allow custom fields in cart items
+- feat: allow custom fields in cart items
 - fix: typo in README
 
