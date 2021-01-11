@@ -75,7 +75,7 @@ export interface CartUpdateOption {
 
 export interface CartCondition {
 	name: string;
-	type: 'tax' | 'voucher' | 'sale' | 'discount' | 'coupon';
+	type: 'tax' | 'voucher' | 'sale' | 'discount' | 'coupon' | 'shipping';
 	target: string | 'subtotal' | 'total';
 	value: string|number;
 	order?: number;

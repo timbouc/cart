@@ -291,7 +291,8 @@ export default class Cart {
 			try{
 				const instance = await this.content();
 
-				let products = (product instanceof Array)? product : [product]
+				const isArray = (product instanceof Array);
+				let products = (isArray? product : [product]) as Array<CartItem>;
 				let items: Array<CartItem> = [];
 				let existingItems: Array<CartItem> = [];
 				let existingItemOptions: { item_id: number | string, options: CartUpdateOption }[] = [];
@@ -372,7 +373,7 @@ export default class Cart {
 				// Merge new and existing items together to return
 				items = items.concat(existingItems);
 
-				resolve(items.length>1? items : items[0] as any);
+				resolve(isArray? items : items[0] as any);
 			}catch(error){
 				reject(error);
 			}
@@ -477,27 +478,32 @@ export default class Cart {
 	/**
 	 * Apply a condition or conditions to cart
 	 */
-	public apply(condition: CartCondition | Array<CartCondition>): Promise<any> {
+	public apply<T extends CartCondition | Array<CartCondition>>(condition: T): Promise<T extends CartCondition? CartCondition : Array<CartCondition>>{
     	const storage = this.storage();
 
 		return new Promise(async (resolve, reject) => {
 			try{
 
-				let conditions = (condition instanceof Array)? condition : [condition]
+				const isArray = (condition instanceof Array);
+				let conditions = (isArray? condition : [condition]) as Array<CartCondition>;
+				let newConditions: Array<CartCondition> = [];
 
 				const instance = await this.content();
 				conditions.forEach(newCon => {
-					const matchingCon = instance.conditions.find(oldCon => oldCon.name == newCon.name);
-
-					// Add if condition with matching name doesn't already exist
-					if(!matchingCon){
-						instance.conditions.push(newCon);
+					const index = instance.conditions.findIndex(oldCon => oldCon.name == newCon.name)
+					if(index >= 0){
+						// Replace if condition with matching name already exist
+						instance.conditions[index] = newCon;
+					}else{
+						// Add if condition with matching name doesn't already exist
+						newConditions.push(newCon);
 					}
 				});
+				Array.prototype.push.apply(instance.conditions, newConditions);
 
 				await storage.put(this._session, storage.serialise( this.compute(instance) ));
 
-				resolve(true);
+				resolve(isArray? conditions : conditions[0] as any);
 			}catch(error){
 				reject(error);
 			};

@@ -8,7 +8,7 @@ A Shopping Cart Implementation for Node.js and browsers.
 * Manage vouchers and miscellaneous values with Conditions
 * Sync frontend and backend instances with remote storage connection
 * Comes with a default local storage (Node.js)
-* Save miscellaneous data to cart
+* Save miscellaneous data to cart (e.g. currency, purchase metadata)
 
 
 
@@ -200,7 +200,7 @@ const item = await cart.apply({
 // apply multiple conditions
 const item = await cart.apply([
     {
-        name: 'Voucher 2',
+        name: 'Voucher 1', // Replaces `Voucher 1` as it already exists (handy for managing tax, shipping and other standard conditions)
         type: 'voucher',
         target: 2,  // cart item id
         value: '-10%', // removes 10% of the value of item 2
@@ -209,7 +209,7 @@ const item = await cart.apply([
         name: 'tax',
         type: 'tax',
         target: 'subtotal',
-        value: '10%', // adds 10% of subtotal
+        value: '10%', // adds 10% of subtotal to total
     }
 ]);
 ```
@@ -249,6 +249,20 @@ await cart.removeCondition('Voucher 2')
 ```javascript
 // Clear all cart conditions
 await cart.clearConditions()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>data(key: string, value?: any): Promise&lt;any&gt;</code></summary>
+
+```javascript
+let data = 'johndoe@timbouc.com'
+
+// Save miscellaneous data. Returns data
+let d1 = await cart.data('currency', 'AUD')
+
+// Get saved data
+let d2 = await cart.data('currency')
 ```
 </details>
 
@@ -322,20 +336,6 @@ await cart.clear()
 ```javascript
 // Get the storage instance
 const storage = cart.storage()
-```
-</details>
-
-<details>
-<summary markdown="span"><code>data(key: string, value?: any): Promise&lt;any&gt;</code></summary>
-
-```javascript
-let data = 'johndoe@timbouc.com'
-
-// Save miscellaneous data. Returns data
-let d1 = await cart.data('checkout_contact', data)
-
-// Get saved data
-let d2 = await cart.data('checkout_contact')
 ```
 </details>
 

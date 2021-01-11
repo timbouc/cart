@@ -220,4 +220,23 @@ describe('Cart Operations', async () => {
 		expect(d1).to.equal(data);
 		expect(d2).to.equal(data);
 	});
+	it('apply condition twice but expect to be replaced', async () => {
+		let con1 = await cart.apply({
+			name: 'Shipping',
+			type: 'shipping',
+			target: 'total',
+			value: 10
+		})
+		let con2 = await cart.apply({
+			name: 'Shipping',
+			type: 'shipping',
+			target: 'total',
+			value: 12
+		})
+		let con3 = await cart.condition('Shipping')
+
+		expect(con1.value).to.equal(10);
+		expect(con2.value).to.equal(12);
+		expect(con3.value).to.equal(12);
+	});
 });
