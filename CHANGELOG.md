@@ -10,3 +10,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - feat: allow custom fields in cart items
 - fix: typo in README
 
+## 0.1.7
+
+- feat: get or put miscellaneous data in cart

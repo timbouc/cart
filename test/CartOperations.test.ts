@@ -211,4 +211,13 @@ describe('Cart Operations', async () => {
 		expect(i1.workspace).not.to.equal('Timbouc');
 		expect(i2.workspace).to.equal('Timbouc');
 	});
+	it('get or put miscellaneous data', async () => {
+		// Get or put miscellaneous data
+		let data = 'johndoe@timbouc.com'
+		let d1 = await cart.data('checkout_contact', data)
+		let d2 = await cart.data('checkout_contact')
+
+		expect(d1).to.equal(data);
+		expect(d2).to.equal(data);
+	});
 });

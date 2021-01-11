@@ -33,6 +33,9 @@ export interface CartContent{
 	conditions: Array<CartCondition>;
 	subtotal: number;
 	total: number;
+	data?: {
+		[key: string]: any
+	}
 }
 
 export interface CartItemOption{

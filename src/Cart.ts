@@ -11,7 +11,7 @@ import { InvalidConfig, DriverNotSupported, OperationFailed } from './exceptions
 import { CartConfig, CartStorageConfig, StorageSingleDriverConfig, CartContent, CartInputItem, CartItem, CartUpdateOption, CartCondition, } from './types';
 import { MethodNotSupported } from './exceptions';
 import { resolve } from 'path';
-import { get, has, isEqual } from 'lodash'
+import { get, set, has, isEqual } from 'lodash'
 
 interface StorageConstructor<T extends Storage = Storage> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -692,6 +692,29 @@ export default class Cart {
 				reject(false);
 			}
 		})
+	}
+
+	/**
+	 * Get or put miscellaneous data
+	 */
+	public data(key: string, value?: any): Promise<any> {
+    	const storage = this.storage();
+		return new Promise(async (resolve, reject) => {
+			try{
+				const instance = await this.content();
+
+				if(value) {
+					set(instance, `data.${key}`, value);
+					await storage.put(this._session, storage.serialise( this.compute(instance) ));
+				}else{
+					value = get(instance, `data.${key}`)
+				}
+
+				resolve(value);
+			}catch(error){
+				reject(error);
+			};
+		});
 	}
 
 	/**

@@ -8,6 +8,7 @@ A Shopping Cart Implementation for Node.js and browsers.
 * Manage vouchers and miscellaneous values with Conditions
 * Sync frontend and backend instances with remote storage connection
 * Comes with a default local storage (Node.js)
+* Save miscellaneous data to cart
 
 
 
@@ -321,6 +322,20 @@ await cart.clear()
 ```javascript
 // Get the storage instance
 const storage = cart.storage()
+```
+</details>
+
+<details>
+<summary markdown="span"><code>data(key: string, value?: any): Promise&lt;any&gt;</code></summary>
+
+```javascript
+let data = 'johndoe@timbouc.com'
+
+// Save miscellaneous data. Returns data
+let d1 = await cart.data('checkout_contact', data)
+
+// Get saved data
+let d2 = await cart.data('checkout_contact')
 ```
 </details>
 
