@@ -8,6 +8,7 @@
 import path from 'path';
 import { Cart, CartCondition, CartItem } from '../src';
 const { expect } = require('chai');
+import { get } from 'lodash'
 
 const session = 'user-1';
 const cart = new Cart(session, {
@@ -213,12 +214,18 @@ describe('Cart Operations', async () => {
 	});
 	it('get or put miscellaneous data', async () => {
 		// Get or put miscellaneous data
-		let data = 'johndoe@timbouc.com'
-		let d1 = await cart.data('checkout_contact', data)
+		let d1 = await cart.data('checkout_contact', 'johndoe@timbouc.com')
 		let d2 = await cart.data('checkout_contact')
+		await cart.data('customer.name', 'Johnn Doe')
+		await cart.data('customer.email', 'johndoe@mail.com')
+		let d3 = await cart.data('customer')
+		let d4 = await cart.data('customer.email')
 
-		expect(d1).to.equal(data);
-		expect(d2).to.equal(data);
+		expect(d1).to.equal('johndoe@timbouc.com');
+		expect(d2).to.equal('johndoe@timbouc.com');
+		expect(get(d3, 'name')).to.equal('Johnn Doe');
+		expect(d4).to.equal('johndoe@mail.com');
+		expect(get(await cart.content(), 'data.customer.name')).to.equal('Johnn Doe');
 	});
 	it('apply condition twice but expect to be replaced', async () => {
 		let con1 = await cart.apply({

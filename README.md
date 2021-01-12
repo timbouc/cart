@@ -256,13 +256,16 @@ await cart.clearConditions()
 <summary markdown="span"><code>data(key: string, value?: any): Promise&lt;any&gt;</code></summary>
 
 ```javascript
-let data = 'johndoe@timbouc.com'
-
 // Save miscellaneous data. Returns data
 let d1 = await cart.data('currency', 'AUD')
 
 // Get saved data
 let d2 = await cart.data('currency')
+
+// Use dot notation
+await cart.data('customer.name', 'Johnn Doe')
+await cart.data('customer.email', 'johndoe@mail.com')
+await cart.data('customer') // returns { name: 'Johnn Doe', email: 'johndoe@mail.com' }
 ```
 </details>
 

@@ -703,7 +703,7 @@ export default class Cart {
 	/**
 	 * Get or put miscellaneous data
 	 */
-	public data(key: string, value?: any): Promise<any> {
+	public data(key?: string, value?: any): Promise<any> {
     	const storage = this.storage();
 		return new Promise(async (resolve, reject) => {
 			try{
@@ -712,8 +712,10 @@ export default class Cart {
 				if(value) {
 					set(instance, `data.${key}`, value);
 					await storage.put(this._session, storage.serialise( this.compute(instance) ));
-				}else{
+				}else if(key){
 					value = get(instance, `data.${key}`)
+				}else{
+					value = get(instance, `data`)
 				}
 
 				resolve(value);
