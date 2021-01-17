@@ -5,7 +5,7 @@ A Shopping Cart Implementation for Node.js and browsers.
 :yellow_heart: **Features**
 
 * Pluggable storage drivers
-* Manage vouchers and miscellaneous values with Conditions
+* Manage vouchers, shipping and other conditional factors with Conditions
 * Sync frontend and backend instances with remote storage connection
 * Comes with a default local storage (Node.js)
 * Save miscellaneous data to cart (e.g. currency, purchase metadata)
@@ -35,6 +35,31 @@ const cart = new Cart(context.uudid, config);
 
 
 ## Usage
+
+```typescript
+const item = await cart.add({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+});
+await cart.apply([
+    {
+        name: 'Voucher 1',
+        type: 'voucher',
+        target: item.item_id,
+        value: '-10%', // removes 10% of the value of product.price
+    },
+    {
+        name: 'Shipping',
+        type: 'shipping',
+        target: 'subtotal', // add 10 to subtotal
+        value: 10, 
+    }
+]);
+
+const subtotal = await cart.subtotal(),
+      total = await cart.total();
+```
 
 ### Registering Storage
 
@@ -87,7 +112,7 @@ Add an item or an array of items to cart
 ```javascript
 // add one item to cart
 const item = await cart.add({
-	// item_id: 1,        // Preset item id
+	// item_id: 1,        // Manually set item id
     id: product.id,
     name: product.name,
     price: product.price,
@@ -114,7 +139,7 @@ const [item1, item2] = await cart.add([
     },
 ])
 
-// add item with custom field(s)
+// Add item with custom field(s)
 // cannot be updated afterwords
 const item = await cart.add({
     id: product.id,
@@ -148,9 +173,9 @@ cart.update(456, {
     quantity: -1, // if the current product has a quantity of 4, another 2 will be subtracted so this will result to 3
 });
 
-// NOTE: as you can see by default, the quantity update is relative to its current value
-// to totally replace the quantity instead of incrementing or decrementing its current quantity value
-// pass an array in quantity
+// NOTE: By default the quantity update is relative to its current value.
+// To totally replace the quantity instead of incrementing or decrementing its current quantity value
+// pass an object
 cart.update(456, {
     quantity: {
         relative: false,
@@ -174,8 +199,7 @@ cart.remove(456);
 </details>
 
 <details>
-<summary markdown="span"><code>get(item_id: number_string): Promise&lt;CartItem&gt;</code></summary>
-
+<summary markdown="span"><code>get(item_id: number | string): Promise&lt;CartItem&gt;</code></summary>
 
 ```javascript
 // Get cart item
@@ -184,13 +208,13 @@ const item = await cart.get(item_id);
 </details>
 
 <details>
-<summary markdown="span"><code>apply(condition: CartCondition | Array&lt;CartCondition&gt;): Promise&lt;any&gt;</code></summary>
+<summary markdown="span"><code>apply(condition: CartCondition | Array&lt;CartCondition&gt;): Promise&lt;CartCondition | Array&lt;CartCondition&gt;&gt;</code></summary>
 
-Appy a cart condition or an array of conditions. Conditions are used to account for discounts, taxes and miscelleneous values.
-The field `target` specified the entity the condition applies to. This value can be `total`, `subtotal` or an item ID.
+Apply a cart condition or an array of conditions. Conditions are used to account for discounts, taxes and other conditional factors.
+The field `target` specifies the entity the condition applies to. This value can be `total`, `subtotal` or an item ID.
 
 ```javascript
-const item = await cart.apply({
+const voucher1 = await cart.apply({
     name: 'Voucher 1',
     type: 'voucher',
     target: 1,  // cart item id
@@ -198,7 +222,7 @@ const item = await cart.apply({
 });
 
 // apply multiple conditions
-const item = await cart.apply([
+const [voucher1b, tax] = await cart.apply([
     {
         name: 'Voucher 1', // Replaces `Voucher 1` as it already exists (handy for managing tax, shipping and other standard conditions)
         type: 'voucher',
@@ -206,7 +230,7 @@ const item = await cart.apply([
         value: '-10%', // removes 10% of the value of item 2
     },
     {
-        name: 'tax',
+        name: 'Tax',
         type: 'tax',
         target: 'subtotal',
         value: '10%', // adds 10% of subtotal to total
@@ -253,10 +277,11 @@ await cart.clearConditions()
 </details>
 
 <details>
-<summary markdown="span"><code>data(key: string, value?: any): Promise&lt;any&gt;</code></summary>
+<summary markdown="span"><code>data(key?: string, value?: any): Promise&lt;any&gt;</code></summary>
+
 
 ```javascript
-// Save miscellaneous data. Returns data
+// Save currency. Returns `AUD`
 let d1 = await cart.data('currency', 'AUD')
 
 // Get saved data
@@ -266,6 +291,7 @@ let d2 = await cart.data('currency')
 await cart.data('customer.name', 'Johnn Doe')
 await cart.data('customer.email', 'johndoe@mail.com')
 await cart.data('customer') // returns { name: 'Johnn Doe', email: 'johndoe@mail.com' }
+await cart.data() // returns { currency: 'AUD', customer: { name: 'Johnn Doe', email: 'johndoe@mail.com' } }
 ```
 </details>
 

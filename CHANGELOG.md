@@ -25,3 +25,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 - fix: update README with more details on `data()` and fix typo
 - feat: return all data if no params specified
+
+## 0.1.10
+
+- fix: update README
