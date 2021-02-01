@@ -627,7 +627,9 @@ export default class Cart {
     } else if (typeof key === "string") {
       value = (await this._loader.get(`data.${key}`)) as V;
     } else if (key !== undefined) {
-      await this._loader.set("data", key);
+      for(let k in key){
+        await this._loader.set(`data.${k}`, key[k]);
+      }
       value = key as any;
     } else {
       value = (await this._loader.get("data")) as any;

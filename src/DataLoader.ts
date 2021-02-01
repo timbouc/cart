@@ -96,16 +96,16 @@ export default class DataLoader {
     await storage.put(this._key, storage.serialise(this.data));
 
     // If there is a pending read, read storage immediately and (re-)hidrate buffer.
-    await this.load.flush();
+    this.load.flush();
   }
 
   public async __load() {
     // If there is a pending write, write storage immediately before read.
-    await this.save.flush();
+    this.save.flush();
 
     const storage = this.storage();
     let raw = await storage.get(this._key);
-    return raw ? storage.parse(raw) : {};
+    this.data = raw ? storage.parse(raw) : {};
   }
 
   public async set(key: string | Record<string, unknown>, value?: unknown) {

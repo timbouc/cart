@@ -40,3 +40,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - feat: added detailed options as params to the `Cart.clear` method
 - feat: added `copy` method for copy cart instance
 - feat: allow passing object as first param in `Cart.data` method
+
+## 0.2.1
+
+- fix: accepting object in `Cart.data` method not to override existing data
+- fix: update README with 0.2.0 feature
+- fix: do not await dataload throttle flush (avoid infinite wait in initial invocation)

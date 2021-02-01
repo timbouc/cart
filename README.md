@@ -9,7 +9,7 @@ A Shopping Cart Implementation for Node.js and browsers.
 * Sync frontend and backend instances with remote storage connection
 * Comes with a default local storage (Node.js)
 * Save miscellaneous data to cart (e.g. currency, purchase metadata)
-* Customise final *items'* and *conditions'* prices for complex (e.g. graduated pricing) use case
+* Customise final *items'* and *conditions'* prices with `hooks` for complex (e.g. graduated pricing) use case
 
 
 
