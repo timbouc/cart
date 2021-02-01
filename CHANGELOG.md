@@ -46,3 +46,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - fix: accepting object in `Cart.data` method not to override existing data
 - fix: update README with 0.2.0 feature
 - fix: do not await dataload throttle flush (avoid infinite wait in initial invocation)
+
+## 0.2.2
+- fix: fix async/await error in `Cart.data` method
+- fix: typo in config example
+- fix: cancel data `loader` pending reads on key (session) switch

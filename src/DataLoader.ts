@@ -77,32 +77,28 @@ export default class DataLoader {
     this.registerDriver("local", LocalFileCartStorage);
 
     this.save = throttle(this.__save, this.write_throttle_wait, {
-      trailing: true
+      leading: false, trailing: true,
     });
 
     this.load = throttle(this.__load, this.read_throttle_wait, {
-      leading: true
+      leading: true, trailing: false,
     });
   }
 
   public key(value: string) {
     this.save.flush(); // hurry save pending data if key is being changed
-    this.load.flush();
+    this.load.cancel(); // cancel pending reads
     this._key = value;
   }
 
   public async __save() {
     const storage = this.storage();
     await storage.put(this._key, storage.serialise(this.data));
-
-    // If there is a pending read, read storage immediately and (re-)hidrate buffer.
-    this.load.flush();
+    this.load.flush();  // If there is a pending read, read storage immediately and update buffer.
   }
 
   public async __load() {
-    // If there is a pending write, write storage immediately before read.
-    this.save.flush();
-
+    this.save.flush();  // If there is a pending write, write storage immediately before read.
     const storage = this.storage();
     let raw = await storage.get(this._key);
     this.data = raw ? storage.parse(raw) : {};

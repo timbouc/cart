@@ -623,7 +623,7 @@ export default class Cart {
     value?: V
   ): Promise<V extends string ? V : K> {
     if (value !== undefined) {
-      this._loader.set(`data.${key}`, value);
+      await this._loader.set(`data.${key}`, value);
     } else if (typeof key === "string") {
       value = (await this._loader.get(`data.${key}`)) as V;
     } else if (key !== undefined) {

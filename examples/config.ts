@@ -46,7 +46,7 @@ export default {
 	  item: (item, _content) => item.quantity * item.price,
 
 	  /**
-	   * Intecept the value used to compute cart for a given condition
+	   * Intercept the value used to compute cart for a given condition
 	   * Condition with value `10%` with give the values { value: 10, is_percentage: true }
 	   * Use case may include complex voucher condition based on target item price or quantity
 	   *
