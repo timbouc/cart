@@ -1,6 +1,6 @@
 {
   "name": "@timbouc/cart",
-  "version": "0.1.10",
+  "version": "0.2.0",
   "description": "A flexible and fluent way to manage shopping carts.",
   "homepage": "https://github.com/timbouc/cart#readme",
   "license": "MIT",
