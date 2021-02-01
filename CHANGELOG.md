@@ -29,3 +29,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## 0.1.10
 
 - fix: update README
+
+## 0.2.0
+
+- refactor:  abstract cart/storage integration into *data loader* layer with read/write buffering/throttling. Avoids racing conditions and unnecessary calls
+- refactor!: remove `Cart.storages` method from Cart class
+- refactor!: remove `Cart.addStorage` method from Cart class
+- feat: enable callback hook for custom  *item*/*condition* price calculation for complex pricing
+- feat: add dynamic typing to `Cart.data` method
+- feat: added detailed options as params to the `Cart.clear` method
+- feat: added `copy` method for copy cart instance
+- feat: allow passing object as first param in `Cart.data` method

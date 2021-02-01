@@ -9,6 +9,7 @@ A Shopping Cart Implementation for Node.js and browsers.
 * Sync frontend and backend instances with remote storage connection
 * Comes with a default local storage (Node.js)
 * Save miscellaneous data to cart (e.g. currency, purchase metadata)
+* Customise final *items'* and *conditions'* prices for complex (e.g. graduated pricing) use case
 
 
 
@@ -23,14 +24,12 @@ $ npm i @timbouc/cart
 $ yarn add @timbouc/cart
 ```
 
-Instantiate with a [configuration](examples/config.ts).
+**Instantiate with a [configuration](examples/config.ts).**
 
 ```javascript
 import { Cart } from '@timbouc/cart';
 const cart = new Cart(context.uudid, config);
 ```
-
-
 
 
 
@@ -53,7 +52,7 @@ await cart.apply([
         name: 'Shipping',
         type: 'shipping',
         target: 'subtotal', // add 10 to subtotal
-        value: 10, 
+        value: 10,
     }
 ]);
 
@@ -352,10 +351,24 @@ await cart.total()
 </details>
 
 <details>
-<summary markdown="span"><code>clear(): Promise</code></summary>
+<summary markdown="span"><code>clear({ conditions: true, data: true }): Promise&lt;void&gt;</code></summary>
 
 ```javascript
 await cart.clear()
+
+// Do not clear conditions and data
+await cart.clear({ conditions: false, data: false })
+```
+</details>
+
+<details>
+<summary markdown="span"><code>copy({ conditions: true, data: true }): Promise&lt;Cart&gt;</code></summary>
+
+```javascript
+const cart2 = await cart.copy(new_session_id)
+
+// Do not copy conditions and data. Also pass a new config
+const cart3 = await cart.copy(new_session_id, { conditions: false, data: false }, new_config)
 ```
 </details>
 
@@ -369,11 +382,11 @@ const storage = cart.storage()
 </details>
 
 <details>
-<summary markdown="span"><code>drivers(): Map&lt;string, StorageConstructor&lt;Storage&gt;&gt;</code></summary>
+<summary markdown="span"><code>loader(): DataLoader</code></summary>
 
 ```javascript
-// Get the registered drivers
-const drivers = cart.drivers()
+// Get theunderlying data loader
+const loader = cart.loader()
 ```
 </details>
 
