@@ -85,25 +85,22 @@ export default class DataLoader {
     });
   }
 
+  /**
+   * Set data access key
+   * @param {string} value
+   */
   public key(value: string) {
-    this.save.flush(); // hurry save pending data if key is being changed
-    this.load.cancel(); // cancel pending reads
+    this.flush();
     this._key = value;
   }
 
-  public async __save() {
-    const storage = this.storage();
-    await storage.put(this._key, storage.serialise(this.data));
-    this.load.flush();  // If there is a pending read, read storage immediately and update buffer.
-  }
-
-  public async __load() {
-    this.save.flush();  // If there is a pending write, write storage immediately before read.
-    const storage = this.storage();
-    let raw = await storage.get(this._key);
-    this.data = raw ? storage.parse(raw) : {};
-  }
-
+  /**
+   * Set data
+   * @param {string} key  data attribute key
+   * @param {Record<string, unknown>} key save object record
+   * @param value    attribute value
+   * @param {Promise<unknown>} value
+   */
   public async set(key: string | Record<string, unknown>, value?: unknown) {
     if (value !== undefined) {
       set(this.data, key as string, value);
@@ -113,11 +110,22 @@ export default class DataLoader {
     await this.save();
   }
 
-  public async get(key?: string, deflt?: unknown) {
+  /**
+   * Get attribute entry
+   * @param {string} key
+   * @param {unknown} deflt default value returned if entry does not exist
+   * @returns {Promise<unknown>}
+   */
+  public async get(key?: string, deflt?: unknown): Promise<unknown> {
     await this.load();
     return key ? get(this.data, key, deflt) : this.data;
   }
 
+  /**
+   * Check if key exists
+   * @param {string} key
+   * @returns {Promise<boolean>}
+   */
   public async has(key: string): Promise<boolean> {
     await this.load();
     return has(this.data, key);
@@ -125,6 +133,7 @@ export default class DataLoader {
 
   /**
    * Get the instantiated storages
+   * @returns {Map<string, Storage>}
    */
   public storages(): Map<string, Storage> {
     return this._storages;
@@ -204,7 +213,29 @@ export default class DataLoader {
    * @param driver
    */
   public driver(driver: string) {
+    this.flush();
     this.storage(driver);
     this.defaultStorage = driver;
+  }
+
+  private async __save() {
+    const storage = this.storage();
+    await storage.put(this._key, storage.serialise(this.data));
+    this.load.flush();  // If there is a pending read, read storage immediately and update buffer.
+  }
+
+  private async __load() {
+    this.save.flush();  // If there is a pending write, write storage immediately before read.
+    const storage = this.storage();
+    let raw = await storage.get(this._key);
+    this.data = raw ? storage.parse(raw) : {};
+  }
+
+  /**
+   * Flush pending reads/writes
+   */
+  private flush() {
+    this.save.flush(); // hurry save pending data if key is being changed
+    this.load.cancel(); // cancel pending reads
   }
 }

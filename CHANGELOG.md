@@ -51,3 +51,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - fix: fix async/await error in `Cart.data` method
 - fix: typo in config example
 - fix: cancel data `loader` pending reads on key (session) switch
+
+## 0.2.3
+- fix: copy all registered drivers in `Cart.copy` method
+- feat: flush and delete pending reads/writes on driver switch

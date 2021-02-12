@@ -157,25 +157,24 @@ Update a cart item. Accumulates quantity by default but override can be specifie
 
 ```typescript
 // new item price, price can also be a string format like so: '98.67'
-cart.update(456, {
+cart.update(5, {
     name: 'New Item Name',
     price: 99.99,
 });
 
 // update a product's quantity
-cart.update(456, {
+cart.update(5, {
     quantity: 2, // if the current product has a quantity of 4, another 2 will be added so this will result to 6
 });
 
 // update a product by reducing its quantity
-cart.update(456, {
-    quantity: -1, // if the current product has a quantity of 4, another 2 will be subtracted so this will result to 3
+cart.update(5, {
+    quantity: -1, // if the current product has a quantity of 4, another 1 will be subtracted so this will result to 3
 });
 
-// NOTE: By default the quantity update is relative to its current value.
 // To totally replace the quantity instead of incrementing or decrementing its current quantity value
 // pass an object
-cart.update(456, {
+cart.update(5, {
     quantity: {
         relative: false,
         value: 5
@@ -191,8 +190,10 @@ cart.update(456, {
 Remove an item or an array of items from cart
 
 ```typescript
-cart.remove(456);
+cart.remove(5);
 
+// Remove multiple
+cart.remove([2, 3, 4]);
 ```
 
 </details>
@@ -276,8 +277,7 @@ await cart.clearConditions()
 </details>
 
 <details>
-<summary markdown="span"><code>data(key?: string, value?: any): Promise&lt;any&gt;</code></summary>
-
+<summary markdown="span"><code>data(key?: string | Record&lt;string, any&gt;, value?: any): Promise&lt;any&gt;</code></summary>
 
 ```javascript
 // Save currency. Returns `AUD`
@@ -290,7 +290,16 @@ let d2 = await cart.data('currency')
 await cart.data('customer.name', 'Johnn Doe')
 await cart.data('customer.email', 'johndoe@mail.com')
 await cart.data('customer') // returns { name: 'Johnn Doe', email: 'johndoe@mail.com' }
-await cart.data() // returns { currency: 'AUD', customer: { name: 'Johnn Doe', email: 'johndoe@mail.com' } }
+await cart.data('token', '1233')
+await cart.data() // returns { currency: 'AUD', customer: { name: 'Johnn Doe', email: 'johndoe@mail.com' }, token: '1233' }
+
+
+// Alternatively, set the above data by passing an object
+// Note that this will NOT override `token` field set above
+await cart.data({
+  currency: 'AUD',
+  customer: { name: 'Johnn Doe', email: 'johndoe@mail.com' }
+})
 ```
 </details>
 

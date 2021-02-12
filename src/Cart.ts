@@ -692,10 +692,18 @@ export default class Cart {
   ): Promise<Cart> {
     const instance = await this.content();
     const cart = new Cart(session, config || this._config);
+
+    // copy registered drivers
+    this._loader.drivers().forEach((driver, name) => cart.registerDriver(name, driver));
+
+    // copy items
     await cart.add(instance.items);
+
+    // optionally copy conditions and data
     options = { conditions: true, data: true, ...options }
     if (options.conditions) await cart.apply(instance.conditions);
     if (options.data) await cart.data(instance.data);
+
     return cart;
   }
 
